@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+.git/
+.env
+PAR_files/
+output/
+*.csv
+par_batch.py
+.DS_Store

@@ -18,8 +18,8 @@ from pathlib import Path
 from openai import OpenAI, AsyncOpenAI
 from dotenv import load_dotenv
 
-# Load API key from sibling project's .env
-load_dotenv(Path(__file__).parent.parent / "municipal-budget-rag" / ".env")
+# Load API key: .env in project dir, or fall back to environment variable
+load_dotenv(Path(__file__).parent / ".env")
 
 client = OpenAI()
 async_client = AsyncOpenAI()

@@ -3,28 +3,23 @@ requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "petey"
+name = "petey-web"
 version = "0.1.0"
-description = "Petey — The Easy PDF Extractor"
+description = "Web interface for Petey PDF Extractor"
 requires-python = ">=3.11"
 dependencies = [
-    "PyMuPDF",
-    "openai",
-    "anthropic",
-    "instructor",
-    "pydantic",
+    "petey @ file:///Users/user/Documents/code/petey",
+    "fastapi",
+    "uvicorn",
+    "python-multipart",
     "pyyaml",
-    "python-dotenv",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
-    "pytest-asyncio",
+    "httpx",
 ]
 
 [tool.setuptools.packages.find]
-include = ["petey*"]
-
-[project.scripts]
-petey = "petey.cli:main"
+include = ["server*"]

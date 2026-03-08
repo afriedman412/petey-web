@@ -1,11 +1,7 @@
-PyMuPDF
-openai
-anthropic
-python-dotenv
+petey @ file:///Users/user/Documents/code/petey
 fastapi
 uvicorn
 python-multipart
-instructor
 pyyaml
 pytest
 httpx

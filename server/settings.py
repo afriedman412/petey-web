@@ -50,7 +50,7 @@ _db = None
 def _get_db() -> firestore.Client:
     global _db
     if _db is None:
-        _db = firestore.Client()
+        _db = firestore.Client(database="petey-fb-db")
     return _db
 
 

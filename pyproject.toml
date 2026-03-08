@@ -13,6 +13,9 @@ dependencies = [
     "uvicorn",
     "python-multipart",
     "pyyaml",
+    "firebase-admin",
+    "google-cloud-firestore",
+    "httpx",
 ]
 
 [project.optional-dependencies]

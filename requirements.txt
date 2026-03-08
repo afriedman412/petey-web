@@ -3,5 +3,7 @@ fastapi
 uvicorn
 python-multipart
 pyyaml
-pytest
+firebase-admin
+google-cloud-firestore
 httpx
+pytest

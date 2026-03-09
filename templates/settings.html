@@ -44,15 +44,52 @@
   .status.ok { color: #16a34a; }
   .status.err { color: #dc2626; }
 
-  .provider-tag {
-    display: inline-block; font-size: 11px; padding: 2px 6px;
-    border-radius: 4px; background: #e5e7eb; color: #555; margin-left: 8px;
+  .validate-btn {
+    padding: 8px 14px; border: 1px solid #ccc; border-radius: 6px;
+    background: #f9f9f9; cursor: pointer; font-size: 13px; white-space: nowrap;
   }
+  .validate-btn:hover { background: #eee; }
+  .key-status { font-size: 12px; margin-top: 4px; }
+  .key-status.valid { color: #16a34a; }
+  .key-status.invalid { color: #dc2626; }
+
+  .auth-bar {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 12px; margin-bottom: 1rem; font-size: 14px;
+  }
+  .auth-bar .user-email { color: #555; }
+  .auth-bar button {
+    padding: 6px 14px; border: 1px solid #ccc; border-radius: 6px;
+    background: #f9f9f9; cursor: pointer; font-size: 13px;
+  }
+  .auth-bar button:hover { background: #eee; }
+  .auth-bar .sign-in-btn { background: #2563eb; color: #fff; border: none; }
+  .auth-bar .sign-in-btn:hover { background: #1d4ed8; }
+  .auth-overlay {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; flex-direction: column; gap: 1rem;
+  }
+  .auth-overlay h2 { margin: 0; }
+  .auth-overlay p { color: #666; margin: 0; }
 </style>
 </head>
 <body>
+
+<div class="auth-bar" id="authBar" style="display:none;">
+  <span class="user-email" id="userEmail"></span>
+  <button id="signOutBtn" style="display:none;">Sign out</button>
+  <button id="signInBtn" class="sign-in-btn" style="display:none;">Sign in with Google</button>
+</div>
+
+<div class="auth-overlay" id="authOverlay">
+  <h2>Petey</h2>
+  <p>Sign in to manage your settings</p>
+  <button id="overlaySignIn" class="sign-in-btn" style="padding:10px 24px; font-size:16px; border-radius:8px; border:none; background:#2563eb; color:#fff; cursor:pointer;">Sign in with Google</button>
+</div>
+
   <h1>Settings</h1>
-  <div class="nav"><a href="/">← Back to extractor</a></div>
+  <div class="nav"><a href="/">&#8592; Back to extractor</a></div>
 
   <div class="section">
     <h2>Model</h2>
@@ -65,7 +102,7 @@
   <div class="section">
     <h2>API Keys</h2>
     <p style="font-size:13px; color:#888; margin-bottom:16px;">
-      Keys are stored on the server and never sent back in full.
+      Keys are stored securely per-user and never sent back in full.
       Leave a field unchanged to keep the existing key.
     </p>
 
@@ -73,25 +110,72 @@
       <label for="openai_key">OpenAI API Key</label>
       <div class="key-row">
         <input type="password" id="openai_key" placeholder="sk-..." autocomplete="off">
-        <button type="button" onclick="toggleVis('openai_key', this)">Show</button>
+        <button type="button" id="toggleOpenai">Show</button>
+        <button type="button" class="validate-btn" id="validateOpenai">Validate</button>
       </div>
       <div class="hint">Required for GPT models</div>
+      <div class="key-status" id="openaiKeyStatus"></div>
     </div>
 
     <div class="field">
       <label for="anthropic_key">Anthropic API Key</label>
       <div class="key-row">
         <input type="password" id="anthropic_key" placeholder="sk-ant-..." autocomplete="off">
-        <button type="button" onclick="toggleVis('anthropic_key', this)">Show</button>
+        <button type="button" id="toggleAnthropic">Show</button>
+        <button type="button" class="validate-btn" id="validateAnthropic">Validate</button>
       </div>
       <div class="hint">Required for Claude models</div>
+      <div class="key-status" id="anthropicKeyStatus"></div>
     </div>
   </div>
 
-  <button class="save-btn" id="saveBtn" onclick="save()">Save settings</button>
+  <button class="save-btn" id="saveBtn">Save settings</button>
   <div class="status" id="status"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+// --- Firebase Auth ---
+const cfgResp = await fetch('/firebase-config');
+const firebaseConfig = await cfgResp.json();
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const provider = new GoogleAuthProvider();
+
+document.getElementById('signInBtn').addEventListener('click', () => signInWithPopup(auth, provider));
+document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
+document.getElementById('overlaySignIn').addEventListener('click', () => signInWithPopup(auth, provider));
+
+let _currentUser = null;
+onAuthStateChanged(auth, user => {
+  const bar = document.getElementById('authBar');
+  const overlay = document.getElementById('authOverlay');
+  bar.style.display = 'flex';
+  _currentUser = user;
+  if (user) {
+    overlay.style.display = 'none';
+    document.getElementById('userEmail').textContent = user.email;
+    document.getElementById('signInBtn').style.display = 'none';
+    document.getElementById('signOutBtn').style.display = '';
+    loadSettings();
+  } else {
+    overlay.style.display = 'flex';
+    document.getElementById('userEmail').textContent = '';
+    document.getElementById('signInBtn').style.display = '';
+    document.getElementById('signOutBtn').style.display = 'none';
+  }
+});
+
+async function authFetch(url, opts = {}) {
+  if (_currentUser) {
+    const token = await _currentUser.getIdToken();
+    opts.headers = { ...(opts.headers || {}), 'Authorization': 'Bearer ' + token };
+  }
+  return fetch(url, opts);
+}
+
+// --- Settings logic ---
 const modelSelect = document.getElementById('model');
 const openaiInput = document.getElementById('openai_key');
 const anthropicInput = document.getElementById('anthropic_key');
@@ -103,27 +187,44 @@ function toggleVis(id, btn) {
   else { inp.type = 'password'; btn.textContent = 'Show'; }
 }
 
+document.getElementById('toggleOpenai').addEventListener('click', function() {
+  toggleVis('openai_key', this);
+});
+document.getElementById('toggleAnthropic').addEventListener('click', function() {
+  toggleVis('anthropic_key', this);
+});
+
 async function loadSettings() {
-  const resp = await fetch('/settings');
-  const data = await resp.json();
+  try {
+    const resp = await authFetch('/settings');
+    if (!resp.ok) {
+      statusEl.textContent = 'Failed to load settings (status ' + resp.status + ')';
+      statusEl.className = 'status err';
+      return;
+    }
+    const data = await resp.json();
 
-  modelSelect.innerHTML = '';
-  for (const m of data.models) {
-    const opt = document.createElement('option');
-    opt.value = m.id;
-    opt.textContent = m.name + ' (' + m.provider + ')';
-    modelSelect.appendChild(opt);
+    modelSelect.innerHTML = '';
+    for (const m of (data.models || [])) {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name + ' (' + m.provider + ')';
+      modelSelect.appendChild(opt);
+    }
+    modelSelect.value = data.model;
+
+    openaiInput.value = data.openai_api_key || '';
+    openaiInput.placeholder = data.openai_api_key ? data.openai_api_key : 'sk-...';
+
+    anthropicInput.value = data.anthropic_api_key || '';
+    anthropicInput.placeholder = data.anthropic_api_key ? data.anthropic_api_key : 'sk-ant-...';
+  } catch (e) {
+    statusEl.textContent = 'Error loading settings: ' + e.message;
+    statusEl.className = 'status err';
   }
-  modelSelect.value = data.model;
-
-  openaiInput.value = data.openai_api_key || '';
-  openaiInput.placeholder = data.openai_api_key ? data.openai_api_key : 'sk-...';
-
-  anthropicInput.value = data.anthropic_api_key || '';
-  anthropicInput.placeholder = data.anthropic_api_key ? data.anthropic_api_key : 'sk-ant-...';
 }
 
-async function save() {
+document.getElementById('saveBtn').addEventListener('click', async () => {
   const btn = document.getElementById('saveBtn');
   btn.disabled = true;
   statusEl.textContent = '';
@@ -137,7 +238,7 @@ async function save() {
   }
 
   try {
-    const resp = await fetch('/settings', {
+    const resp = await authFetch('/settings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -154,9 +255,45 @@ async function save() {
   } finally {
     btn.disabled = false;
   }
+});
+
+// --- Key validation ---
+async function validateKey(providerName, inputEl, statusElId) {
+  const key = inputEl.value;
+  const el = document.getElementById(statusElId);
+  if (!key || key.includes('...')) {
+    el.textContent = 'Enter a full key to validate.';
+    el.className = 'key-status invalid';
+    return;
+  }
+  el.textContent = 'Validating...';
+  el.className = 'key-status';
+  try {
+    const resp = await authFetch('/validate-key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ provider: providerName, key }),
+    });
+    const data = await resp.json();
+    if (data.valid) {
+      el.textContent = data.message;
+      el.className = 'key-status valid';
+    } else {
+      el.textContent = data.message || 'Invalid key';
+      el.className = 'key-status invalid';
+    }
+  } catch (e) {
+    el.textContent = 'Validation error: ' + e.message;
+    el.className = 'key-status invalid';
+  }
 }
 
-loadSettings();
+document.getElementById('validateOpenai').addEventListener('click', () => {
+  validateKey('openai', openaiInput, 'openaiKeyStatus');
+});
+document.getElementById('validateAnthropic').addEventListener('click', () => {
+  validateKey('anthropic', anthropicInput, 'anthropicKeyStatus');
+});
 </script>
 </body>
 </html>

@@ -98,10 +98,45 @@
 </style>
 </head>
 <body>
+
+<style>
+  .auth-bar {
+    display: flex; align-items: center; justify-content: flex-end;
+    gap: 12px; margin-bottom: 0.5rem; font-size: 14px;
+  }
+  .auth-bar .user-email { color: #555; }
+  .auth-bar button {
+    padding: 6px 14px; border: 1px solid #ccc; border-radius: 6px;
+    background: #f9f9f9; cursor: pointer; font-size: 13px;
+  }
+  .auth-bar button:hover { background: #eee; }
+  .auth-bar .sign-in-btn { background: #2563eb; color: #fff; border: none; }
+  .auth-bar .sign-in-btn:hover { background: #1d4ed8; }
+  .auth-overlay {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; flex-direction: column; gap: 1rem;
+  }
+  .auth-overlay h2 { margin: 0; }
+  .auth-overlay p { color: #666; margin: 0; }
+</style>
+
+<div class="auth-bar" id="authBar" style="display:none;">
+  <span class="user-email" id="userEmail"></span>
+  <button id="signOutBtn" style="display:none;">Sign out</button>
+  <button id="signInBtn" class="sign-in-btn" style="display:none;">Sign in with Google</button>
+</div>
+
+<div class="auth-overlay" id="authOverlay">
+  <h2>Petey</h2>
+  <p>Sign in to get started</p>
+  <button id="overlaySignIn" class="sign-in-btn" style="padding:10px 24px; font-size:16px; border-radius:8px; border:none; background:#2563eb; color:#fff; cursor:pointer;">Sign in with Google</button>
+</div>
+
 <h1>Petey</h1>
 <p class="subtitle">
   <span>The Easy PDF Extractor</span>
-  <a href="/settings/page">Settings</a>
+  <span><a href="/template-builder">Schema Builder</a> &middot; <a href="/settings/page">Settings</a></span>
 </p>
 
 <div class="dropzone" id="dropzone">
@@ -155,7 +190,52 @@
 <div id="status"></div>
 <div id="results"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+// --- Firebase Auth setup ---
+const cfgResp = await fetch('/firebase-config');
+const firebaseConfig = await cfgResp.json();
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const provider = new GoogleAuthProvider();
+
+const signInBtn = document.getElementById('signInBtn');
+const signOutBtn = document.getElementById('signOutBtn');
+const overlaySignIn = document.getElementById('overlaySignIn');
+signInBtn.addEventListener('click', () => signInWithPopup(auth, provider));
+signOutBtn.addEventListener('click', () => signOut(auth));
+overlaySignIn.addEventListener('click', () => signInWithPopup(auth, provider));
+
+let _currentUser = null;
+onAuthStateChanged(auth, user => {
+  const bar = document.getElementById('authBar');
+  const overlay = document.getElementById('authOverlay');
+  bar.style.display = 'flex';
+  _currentUser = user;
+  if (user) {
+    overlay.style.display = 'none';
+    document.getElementById('userEmail').textContent = user.email;
+    signInBtn.style.display = 'none';
+    signOutBtn.style.display = '';
+  } else {
+    overlay.style.display = 'flex';
+    document.getElementById('userEmail').textContent = '';
+    signInBtn.style.display = '';
+    signOutBtn.style.display = 'none';
+  }
+});
+
+async function authFetch(url, opts = {}) {
+  if (_currentUser) {
+    const token = await _currentUser.getIdToken();
+    opts.headers = { ...(opts.headers || {}), 'Authorization': 'Bearer ' + token };
+  }
+  return fetch(url, opts);
+}
+
+// --- App logic ---
 let selectedFiles = [];
 let recordType = 'single';
 let fields = [];
@@ -171,7 +251,7 @@ const extractBtn = document.getElementById('extractBtn');
 const loadSel = document.getElementById('loadSchema');
 
 // Load saved schemas
-fetch('/schemas').then(r => r.json()).then(schemas => {
+authFetch('/schemas').then(r => r.json()).then(schemas => {
   schemas.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s.file;
@@ -182,7 +262,7 @@ fetch('/schemas').then(r => r.json()).then(schemas => {
 
 loadSel.addEventListener('change', async () => {
   if (!loadSel.value) { fields = []; renderFields(); return; }
-  const resp = await fetch('/schemas/' + loadSel.value);
+  const resp = await authFetch('/schemas/' + loadSel.value);
   const spec = await resp.json();
   document.getElementById('schemaName').value = spec.name || '';
   document.getElementById('instructions').value = spec.instructions || '';
@@ -312,7 +392,7 @@ document.getElementById('yamlFile').addEventListener('change', e => {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    fetch('/parse-yaml', { method: 'POST',
+    authFetch('/parse-yaml', { method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({yaml: reader.result})
     }).then(r => r.json()).then(spec => {
@@ -355,12 +435,27 @@ function buildSpec() {
 // Extract
 const CONCURRENCY = 5;
 
+class ApiKeyError extends Error {
+  constructor(msg) { super(msg); this.name = 'ApiKeyError'; }
+}
+
 async function extractFile(file, spec, instr) {
   const form = new FormData();
   form.append('file', file);
   form.append('schema_spec', JSON.stringify(spec));
   if (instr) form.append('instructions', instr);
-  const resp = await fetch('/extract', { method: 'POST', body: form });
+  const resp = await authFetch('/extract', { method: 'POST', body: form });
+  if (!resp.ok) {
+    let msg = 'Extraction failed (status ' + resp.status + ')';
+    try {
+      const errData = await resp.json();
+      msg = errData.error || errData.detail || msg;
+    } catch (_) {
+      msg = await resp.text() || msg;
+    }
+    if (msg.includes('API key') || msg.includes('api key')) throw new ApiKeyError(msg);
+    throw new Error(msg);
+  }
   return await resp.json();
 }
 
@@ -381,7 +476,7 @@ extractBtn.addEventListener('click', async () => {
   // Init server-side results file
   let resultsFile = null;
   try {
-    const initResp = await fetch('/results/init', { method: 'POST' });
+    const initResp = await authFetch('/results/init', { method: 'POST' });
     const initData = await initResp.json();
     resultsFile = initData.file;
   } catch(e) {
@@ -389,7 +484,8 @@ extractBtn.addEventListener('click', async () => {
   }
 
   // Process in batches of CONCURRENCY
-  for (let i = 0; i < total; i += CONCURRENCY) {
+  let apiKeyError = null;
+  for (let i = 0; i < total && !apiKeyError; i += CONCURRENCY) {
     const batch = [];
     for (let j = i; j < Math.min(i + CONCURRENCY, total); j++) {
       batch.push(selectedFiles[j]);
@@ -397,13 +493,14 @@ extractBtn.addEventListener('click', async () => {
     st.textContent = 'Processing files ' + (i + 1) + '–' + Math.min(i + CONCURRENCY, total) + ' of ' + total + '...';
 
     const promises = batch.map(async file => {
+      if (apiKeyError) return;
       try {
         const data = await extractFile(file, spec, instr);
         if (data._warning) warnings.push(file.name + ': ' + data._warning);
 
         // Append to server-side file immediately
         if (resultsFile && !data._error) {
-          fetch('/results/append', {
+          authFetch('/results/append', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ file: resultsFile, data }),
@@ -423,13 +520,26 @@ extractBtn.addEventListener('click', async () => {
           allResults.push(data);
         }
       } catch(e) {
+        if (e instanceof ApiKeyError) {
+          apiKeyError = e.message;
+          return;
+        }
         warnings.push(file.name + ': ' + e.message);
       }
       completed++;
     });
 
     await Promise.all(promises);
+    if (apiKeyError) break;
     st.textContent = completed + ' / ' + total + ' files done...';
+  }
+
+  if (apiKeyError) {
+    st.innerHTML = '<span style="color:#dc2626; font-weight:600;">' + apiKeyError + '</span>' +
+      '<br><a href="/settings/page" style="color:#2563eb;">Go to Settings</a>';
+    extractBtn.disabled = false;
+    updateExtractBtn();
+    return;
   }
 
   let statusText = 'Done — ' + total + ' file' + (total > 1 ? 's' : '') + ' processed.';
@@ -563,7 +673,7 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
     spec.name = name;
     document.getElementById('schemaName').value = name;
   }
-  const resp = await fetch('/schemas', {
+  const resp = await authFetch('/schemas', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(spec),

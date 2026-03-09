@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Schema Builder — Petey</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; max-width: 900px;
+         margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+  h1 { margin-bottom: 0.25rem; }
+  .subtitle { color: #666; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+  .subtitle a { color: #2563eb; text-decoration: none; font-size: 14px; }
+  .subtitle a:hover { text-decoration: underline; }
+
+  .meta-section { margin-bottom: 1.5rem; }
+  .meta-section label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
+  .meta-section input, .meta-section textarea {
+    width: 100%; padding: 0.4rem 0.6rem; font-size: 0.95rem;
+    border: 1px solid #ccc; border-radius: 4px; font-family: inherit;
+  }
+  .meta-section textarea { min-height: 40px; resize: vertical; }
+  .meta-row { display: flex; gap: 1rem; margin-bottom: 0.75rem; }
+  .meta-row > div { flex: 1; }
+
+  .controls { display: flex; gap: 1rem; align-items: center;
+              margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .controls label { font-weight: 600; }
+  .toggle-group { display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: hidden; }
+  .toggle-group button {
+    padding: 0.4rem 1rem; border: none; background: #fff; cursor: pointer;
+    font-size: 0.9rem; transition: background 0.15s;
+  }
+  .toggle-group button.active { background: #228be6; color: #fff; }
+
+  .schema-section { margin-bottom: 1.5rem; }
+  .schema-section h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  .field-row {
+    display: grid; grid-template-columns: 1fr 120px 2fr 30px;
+    gap: 0.5rem; align-items: center; margin-bottom: 0.4rem;
+  }
+  .field-row input[type=text], .field-row select {
+    padding: 0.35rem 0.5rem; font-size: 0.9rem; border: 1px solid #ccc;
+    border-radius: 4px; width: 100%;
+  }
+  .field-row .remove-btn {
+    background: none; border: none; color: #e03131; cursor: pointer;
+    font-size: 1.2rem; padding: 0;
+  }
+  .enum-values {
+    grid-column: 1 / -1; margin-left: 0.5rem; margin-bottom: 0.5rem;
+  }
+  .enum-values input {
+    padding: 0.3rem 0.5rem; font-size: 0.85rem; border: 1px solid #ddd;
+    border-radius: 4px; width: 100%;
+  }
+  .enum-values label { font-size: 0.8rem; color: #666; }
+  .nested-section {
+    grid-column: 1 / -1; margin-left: 1.5rem; margin-bottom: 0.5rem;
+    border-left: 2px solid #dee2e6; padding-left: 1rem;
+  }
+  .nested-section .field-row {
+    grid-template-columns: 1fr 120px 2fr 30px;
+  }
+  .nested-section h3 { font-size: 0.85rem; color: #666; margin-bottom: 0.3rem; }
+
+  .add-btn, .download-btn, .copy-btn, .load-btn {
+    padding: 0.5rem 1.2rem; border: none; border-radius: 4px;
+    cursor: pointer; font-size: 0.95rem;
+  }
+  .add-btn { background: #e7f5ff; color: #228be6; }
+  .download-btn { background: #228be6; color: #fff; font-weight: 600; }
+  .copy-btn { background: #ebfbee; color: #2b8a3e; }
+  .load-btn { background: #f1f3f5; color: #333; border: 1px solid #ccc; }
+  .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+
+  .instructions-section { margin-bottom: 1.5rem; }
+  .instructions-section label { font-size: 0.9rem; color: #666; display: block; margin-bottom: 0.3rem; }
+  .instructions-area { width: 100%; min-height: 60px; font-size: 0.9rem;
+               padding: 0.5rem; border: 1px solid #ccc; border-radius: 4px;
+               font-family: system-ui, sans-serif; resize: vertical; }
+
+  .preview { margin-top: 1rem; }
+  .preview h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+  pre { background: #f1f3f5; padding: 1rem; border-radius: 6px;
+        overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; }
+
+  .cli-hint { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px;
+              padding: 1rem; margin-top: 1rem; font-size: 0.85rem; }
+  .cli-hint code { background: #e9ecef; padding: 0.15rem 0.4rem; border-radius: 3px; }
+
+  #status { margin: 0.5rem 0; font-size: 0.9rem; color: #16a34a; }
+</style>
+</head>
+<body>
+
+<h1>Schema Builder</h1>
+<p class="subtitle">
+  <span>Build YAML schemas for the Petey CLI</span>
+  <a href="/">Back to extractor</a>
+</p>
+
+<div class="meta-section">
+  <div class="meta-row">
+    <div>
+      <label for="schemaName">Schema name</label>
+      <input type="text" id="schemaName" placeholder="e.g. PAR Decision">
+    </div>
+  </div>
+  <div>
+    <label for="schemaDesc">Description (optional)</label>
+    <input type="text" id="schemaDesc" placeholder="e.g. DHCR Petition for Administrative Review">
+  </div>
+</div>
+
+<div class="controls">
+  <label>Record type:</label>
+  <div class="toggle-group" id="modeToggle">
+    <button class="active" data-mode="single">Single record</button>
+    <button data-mode="array">Array (multiple rows)</button>
+  </div>
+  <label style="margin-left:1rem;">Load:</label>
+  <input type="file" id="loadYaml" accept=".yaml,.yml" style="font-size:0.9rem;">
+</div>
+
+<div class="schema-section">
+  <h2>Fields</h2>
+  <div id="fieldRows"></div>
+  <div class="btn-row" style="margin-top:0.5rem;">
+    <button class="add-btn" id="addField">+ Add field</button>
+  </div>
+</div>
+
+<div class="instructions-section">
+  <label for="instructions">Additional instructions (optional)</label>
+  <textarea class="instructions-area" id="instructions"
+    placeholder="e.g. Dates are in MM/DD/YYYY format. MCI items appear indented below each case."></textarea>
+</div>
+
+<div class="btn-row">
+  <button class="download-btn" id="downloadBtn">Download YAML</button>
+  <button class="copy-btn" id="copyBtn">Copy to clipboard</button>
+</div>
+<div id="status"></div>
+
+<div class="preview">
+  <h2>Preview</h2>
+  <pre id="yamlPreview"></pre>
+</div>
+
+<div class="cli-hint">
+  <strong>Using with the Petey CLI:</strong><br>
+  <code>pip install petey</code><br><br>
+  <code>petey extract --schema your_schema.yaml document.pdf</code><br>
+  <code>petey extract --schema your_schema.yaml folder/ -o results.csv</code><br><br>
+  See <code>petey extract --help</code> for all options.
+</div>
+
+<script>
+let recordType = 'single';
+let fields = [];
+
+// --- Mode toggle ---
+document.getElementById('modeToggle').addEventListener('click', e => {
+  if (e.target.tagName !== 'BUTTON') return;
+  recordType = e.target.dataset.mode;
+  document.querySelectorAll('#modeToggle button').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === recordType);
+  });
+  updatePreview();
+});
+
+// --- Load YAML ---
+document.getElementById('loadYaml').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      // Simple YAML parsing for schema files — send to server
+      fetch('/parse-yaml', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ yaml: reader.result }),
+      }).then(r => r.json()).then(spec => {
+        document.getElementById('schemaName').value = spec.name || '';
+        document.getElementById('schemaDesc').value = spec.description || '';
+        document.getElementById('instructions').value = spec.instructions || '';
+        recordType = spec.record_type === 'array' ? 'array' : 'single';
+        document.querySelectorAll('#modeToggle button').forEach(b => {
+          b.classList.toggle('active', b.dataset.mode === recordType);
+        });
+        fields = parseFieldsFromSpec(spec.fields || {});
+        renderFields();
+      }).catch(() => alert('Invalid YAML file'));
+    } catch (e) { alert('Error reading file'); }
+  };
+  reader.readAsText(file);
+});
+
+function parseFieldsFromSpec(fieldsObj) {
+  return Object.entries(fieldsObj).map(([name, cfg]) => {
+    const f = {
+      name,
+      type: cfg.type || 'string',
+      description: cfg.description || '',
+      values: (cfg.values || []).join(', '),
+      subfields: [],
+    };
+    if (cfg.type === 'array' && cfg.fields) {
+      f.subfields = Object.entries(cfg.fields).map(([sn, sc]) => ({
+        name: sn,
+        type: sc.type || 'string',
+        description: sc.description || '',
+        values: (sc.values || []).join(', '),
+      }));
+    }
+    return f;
+  });
+}
+
+// --- Field rendering ---
+function esc(s) { return (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+
+function renderFields() {
+  const container = document.getElementById('fieldRows');
+  container.innerHTML = '';
+
+  fields.forEach((f, i) => {
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    row.innerHTML =
+      '<input type="text" placeholder="Field name" value="' + esc(f.name) + '" data-i="' + i + '" data-key="name">' +
+      '<select data-i="' + i + '" data-key="type">' +
+        '<option value="string"' + (f.type === 'string' ? ' selected' : '') + '>Text</option>' +
+        '<option value="number"' + (f.type === 'number' ? ' selected' : '') + '>Number</option>' +
+        '<option value="date"' + (f.type === 'date' ? ' selected' : '') + '>Date</option>' +
+        '<option value="enum"' + (f.type === 'enum' ? ' selected' : '') + '>Enum</option>' +
+        '<option value="array"' + (f.type === 'array' ? ' selected' : '') + '>Nested array</option>' +
+      '</select>' +
+      '<input type="text" placeholder="Description" value="' + esc(f.description) + '" data-i="' + i + '" data-key="description">' +
+      '<button class="remove-btn" data-i="' + i + '">&times;</button>';
+    container.appendChild(row);
+
+    if (f.type === 'enum') {
+      const ev = document.createElement('div');
+      ev.className = 'enum-values';
+      ev.innerHTML = '<label>Values (comma-separated, leave blank to infer):</label>' +
+        '<input type="text" placeholder="Option A, Option B, ..." value="' + esc(f.values) + '" data-i="' + i + '" data-key="values">';
+      container.appendChild(ev);
+    }
+
+    if (f.type === 'array') {
+      const nested = document.createElement('div');
+      nested.className = 'nested-section';
+      nested.innerHTML = '<h3>Subfields for "' + esc(f.name || 'items') + '"</h3>';
+      const subs = f.subfields || [];
+      subs.forEach((sf, si) => {
+        const sr = document.createElement('div');
+        sr.className = 'field-row';
+        sr.innerHTML =
+          '<input type="text" placeholder="Subfield name" value="' + esc(sf.name) + '" data-i="' + i + '" data-si="' + si + '" data-key="name">' +
+          '<select data-i="' + i + '" data-si="' + si + '" data-key="type">' +
+            '<option value="string"' + (sf.type === 'string' ? ' selected' : '') + '>Text</option>' +
+            '<option value="number"' + (sf.type === 'number' ? ' selected' : '') + '>Number</option>' +
+            '<option value="date"' + (sf.type === 'date' ? ' selected' : '') + '>Date</option>' +
+            '<option value="enum"' + (sf.type === 'enum' ? ' selected' : '') + '>Enum</option>' +
+          '</select>' +
+          '<input type="text" placeholder="Description" value="' + esc(sf.description) + '" data-i="' + i + '" data-si="' + si + '" data-key="description">' +
+          '<button class="remove-btn" data-i="' + i + '" data-si="' + si + '">&times;</button>';
+        nested.appendChild(sr);
+
+        if (sf.type === 'enum') {
+          const sev = document.createElement('div');
+          sev.className = 'enum-values';
+          sev.innerHTML = '<label>Values:</label>' +
+            '<input type="text" placeholder="Option A, Option B, ..." value="' + esc(sf.values) + '" data-i="' + i + '" data-si="' + si + '" data-key="values">';
+          nested.appendChild(sev);
+        }
+      });
+      const addSub = document.createElement('button');
+      addSub.className = 'add-btn';
+      addSub.textContent = '+ Add subfield';
+      addSub.style.fontSize = '0.85rem';
+      addSub.style.marginTop = '0.3rem';
+      addSub.dataset.i = i;
+      nested.appendChild(addSub);
+      container.appendChild(nested);
+    }
+  });
+
+  // Event listeners
+  container.querySelectorAll('input, select').forEach(el => {
+    const handler = e => {
+      const idx = parseInt(e.target.dataset.i);
+      const si = e.target.dataset.si;
+      if (si !== undefined) {
+        const subIdx = parseInt(si);
+        fields[idx].subfields[subIdx][e.target.dataset.key] = e.target.value;
+        if (e.target.dataset.key === 'type') renderFields();
+      } else {
+        fields[idx][e.target.dataset.key] = e.target.value;
+        if (e.target.dataset.key === 'type') {
+          if (e.target.value === 'array' && !fields[idx].subfields) {
+            fields[idx].subfields = [];
+          }
+          renderFields();
+        }
+      }
+      updatePreview();
+    };
+    el.addEventListener('input', handler);
+    el.addEventListener('change', handler);
+  });
+
+  container.querySelectorAll('.remove-btn').forEach(el => {
+    el.addEventListener('click', e => {
+      const idx = parseInt(e.currentTarget.dataset.i);
+      const si = e.currentTarget.dataset.si;
+      if (si !== undefined) {
+        fields[idx].subfields.splice(parseInt(si), 1);
+      } else {
+        fields.splice(idx, 1);
+      }
+      renderFields();
+      updatePreview();
+    });
+  });
+
+  container.querySelectorAll('.nested-section .add-btn').forEach(el => {
+    el.addEventListener('click', e => {
+      const idx = parseInt(e.currentTarget.dataset.i);
+      if (!fields[idx].subfields) fields[idx].subfields = [];
+      fields[idx].subfields.push({ name: '', type: 'string', description: '', values: '' });
+      renderFields();
+      updatePreview();
+    });
+  });
+
+  updatePreview();
+}
+
+document.getElementById('addField').addEventListener('click', () => {
+  fields.push({ name: '', type: 'string', description: '', values: '', subfields: [] });
+  renderFields();
+  const inputs = document.querySelectorAll('#fieldRows > .field-row input[data-key="name"]');
+  if (inputs.length) inputs[inputs.length - 1].focus();
+});
+
+// --- YAML generation ---
+function buildYaml() {
+  const name = document.getElementById('schemaName').value.trim();
+  const desc = document.getElementById('schemaDesc').value.trim();
+  const instr = document.getElementById('instructions').value.trim();
+
+  let yaml = '';
+  if (name) yaml += 'name: ' + name + '\n';
+  if (desc) yaml += 'description: ' + desc + '\n';
+  if (recordType === 'array') yaml += 'record_type: array\n';
+  if (instr) yaml += 'instructions: ' + yamlStr(instr) + '\n';
+  if (name || desc || recordType === 'array' || instr) yaml += '\n';
+
+  yaml += 'fields:\n';
+  for (const f of fields) {
+    if (!f.name.trim()) continue;
+    yaml += '  ' + f.name.trim() + ':\n';
+    yaml += '    type: ' + f.type + '\n';
+    if (f.description.trim()) yaml += '    description: ' + yamlStr(f.description.trim()) + '\n';
+    if (f.type === 'enum' && f.values.trim()) {
+      const vals = f.values.split(',').map(v => v.trim()).filter(Boolean);
+      yaml += '    values: [' + vals.join(', ') + ']\n';
+    }
+    if (f.type === 'array' && f.subfields && f.subfields.length) {
+      yaml += '    fields:\n';
+      for (const sf of f.subfields) {
+        if (!sf.name.trim()) continue;
+        yaml += '      ' + sf.name.trim() + ':\n';
+        yaml += '        type: ' + sf.type + '\n';
+        if (sf.description.trim()) yaml += '        description: ' + yamlStr(sf.description.trim()) + '\n';
+        if (sf.type === 'enum' && sf.values && sf.values.trim()) {
+          const svals = sf.values.split(',').map(v => v.trim()).filter(Boolean);
+          yaml += '        values: [' + svals.join(', ') + ']\n';
+        }
+      }
+    }
+    yaml += '\n';
+  }
+
+  return yaml.trimEnd() + '\n';
+}
+
+function yamlStr(s) {
+  if (s.includes('\n') || s.includes(':') || s.includes('#') || s.includes("'")) {
+    return '"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  }
+  return s;
+}
+
+function updatePreview() {
+  document.getElementById('yamlPreview').textContent = buildYaml();
+}
+
+// --- Meta field listeners ---
+document.getElementById('schemaName').addEventListener('input', updatePreview);
+document.getElementById('schemaDesc').addEventListener('input', updatePreview);
+document.getElementById('instructions').addEventListener('input', updatePreview);
+
+// --- Download / Copy ---
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const yaml = buildYaml();
+  const name = document.getElementById('schemaName').value.trim();
+  const filename = (name ? name.toLowerCase().replace(/\s+/g, '_') : 'schema') + '.yaml';
+  const blob = new Blob([yaml], { type: 'text/yaml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  document.getElementById('status').textContent = 'Downloaded ' + filename;
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const yaml = buildYaml();
+  navigator.clipboard.writeText(yaml).then(() => {
+    document.getElementById('status').textContent = 'Copied to clipboard!';
+  }).catch(() => {
+    document.getElementById('status').textContent = 'Copy failed — use Download instead.';
+  });
+});
+
+// --- Init ---
+fields.push({ name: '', type: 'string', description: '', values: '', subfields: [] });
+renderFields();
+</script>
+</body>
+</html>

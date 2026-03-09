@@ -2,7 +2,7 @@ VENV = venv
 PYTHON = $(VENV)/bin/python
 PIP = $(VENV)/bin/pip
 
-.PHONY: venv install run clean
+.PHONY: venv install run deploy clean
 
 venv:
 	python3 -m venv $(VENV)
@@ -12,6 +12,9 @@ install: venv
 
 run: venv
 	$(VENV)/bin/uvicorn server.app:app --reload
+
+deploy:
+	gcloud run deploy petey --source . --region=us-east1 --allow-unauthenticated
 
 clean:
 	rm -rf $(VENV)

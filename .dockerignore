@@ -1,9 +1,13 @@
 venv/
 __pycache__/
+*.pyc
+*.egg-info
 .git/
 .env
+settings.json
 PAR_files/
 output/
+tests/
 *.csv
 par_batch.py
 .DS_Store

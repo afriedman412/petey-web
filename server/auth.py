@@ -17,6 +17,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 # Paths that don't require authentication
 PUBLIC_PATHS = {
     "/", "/settings/page", "/health", "/firebase-config",
+    "/template-builder", "/parse-yaml",
 }
 
 # Initialize Firebase Admin SDK once.

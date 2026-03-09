@@ -1,4 +1,4 @@
-petey @ git+https://github.com/afriedman412/petey.git
+petey
 fastapi
 uvicorn
 python-multipart

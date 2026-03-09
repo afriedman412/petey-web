@@ -289,3 +289,8 @@ async def builder_page():
 @app.get("/settings/page", response_class=HTMLResponse)
 async def settings_page():
     return _load_template("settings.html")
+
+
+@app.get("/template-builder", response_class=HTMLResponse)
+async def template_builder_page():
+    return _load_template("template_builder.html")

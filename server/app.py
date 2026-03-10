@@ -16,6 +16,7 @@ from server.extract import (
     list_schemas, SCHEMAS_DIR, _build_model,
     extract_text, check_text_length,
 )
+from server.par_extract import async_process_file as par_process_file
 from server.settings import (
     get_settings, update_settings, mask_key, get_provider, MODELS,
 )
@@ -149,6 +150,58 @@ async def extract_endpoint(
     return data
 
 
+@app.post("/par/extract")
+async def par_extract_endpoint(
+    request: Request,
+    files: list[UploadFile],
+    uid: str = Depends(get_uid),
+):
+    """Bespoke PAR decision extractor with few-shot + validation + re-query.
+    Accepts one or more PDF files (supports folder upload from the UI)."""
+    settings = get_settings(uid)
+    model_id = settings["model"]
+    provider = get_provider(model_id)
+    if provider == "anthropic":
+        return JSONResponse(
+            {"error": "PAR extractor currently requires an OpenAI model."},
+            status_code=400,
+        )
+    api_key = settings.get("openai_api_key")
+    if not api_key:
+        return JSONResponse(
+            {"error": "No OpenAI API key configured. Add one in Settings."},
+            status_code=400,
+        )
+
+    # Filter to PDFs only
+    pdf_files = [f for f in files if f.filename and f.filename.lower().endswith(".pdf")]
+    if not pdf_files:
+        return JSONResponse({"error": "No PDF files found."}, 400)
+
+    import asyncio
+
+    async def _process_one(file: UploadFile) -> dict:
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp.write(await file.read())
+            tmp_path = tmp.name
+        try:
+            data = await par_process_file(
+                tmp_path, model=model_id, api_key=api_key,
+            )
+            data["_source_file"] = file.filename
+        except Exception as e:
+            data = {"_source_file": file.filename, "_error": str(e)}
+        finally:
+            Path(tmp_path).unlink(missing_ok=True)
+        return data
+
+    results = await asyncio.gather(*[_process_one(f) for f in pdf_files])
+
+    if len(results) == 1:
+        return results[0]
+    return results
+
+
 @app.post("/results/init")
 async def results_init():
     OUTPUT_DIR.mkdir(exist_ok=True)
@@ -266,6 +319,7 @@ async def validate_key_endpoint(
 async def firebase_config():
     """Serve Firebase client config from environment variables."""
     import os
+    disabled = os.getenv("FIREBASE_AUTH_DISABLED", "").strip() in ("1", "true")
     return {
         "apiKey": os.environ.get("FIREBASE_API_KEY", ""),
         "authDomain": os.environ.get(
@@ -274,6 +328,7 @@ async def firebase_config():
         "projectId": os.environ.get(
             "FIREBASE_PROJECT_ID", ""
         ),
+        "authDisabled": disabled,
     }
 
 
@@ -294,3 +349,8 @@ async def settings_page():
 @app.get("/template-builder", response_class=HTMLResponse)
 async def template_builder_page():
     return _load_template("template_builder.html")
+
+
+@app.get("/par", response_class=HTMLResponse)
+async def par_page():
+    return _load_template("par.html")

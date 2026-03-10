@@ -11,7 +11,7 @@ venv:
 install: venv
 
 run: venv
-	$(VENV)/bin/uvicorn server.app:app --reload
+	export FIREBASE_AUTH_DISABLED=1 && $(VENV)/bin/uvicorn server.app:app --reload
 
 deploy:
 	gcloud run deploy petey --source . --region=us-east1 --allow-unauthenticated

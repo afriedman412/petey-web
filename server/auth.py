@@ -17,13 +17,13 @@ from starlette.middleware.base import BaseHTTPMiddleware
 # Paths that don't require authentication
 PUBLIC_PATHS = {
     "/", "/settings/page", "/health", "/firebase-config",
-    "/template-builder", "/parse-yaml",
+    "/template-builder", "/parse-yaml", "/par",
 }
 
-# Initialize Firebase Admin SDK once.
+# Initialize Firebase Admin SDK once (skip when auth is disabled for local dev).
 # On Cloud Run, calling initialize_app() with no args uses the
 # default service account automatically (ADC).
-if not firebase_admin._apps:
+if not firebase_admin._apps and os.getenv("FIREBASE_AUTH_DISABLED", "").strip() not in ("1", "true"):
     firebase_admin.initialize_app()
 
 

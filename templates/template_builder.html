@@ -353,7 +353,8 @@ function buildYaml() {
   const instr = document.getElementById('instructions').value.trim();
 
   let yaml = '';
-  if (name) yaml += 'name: ' + name + '\n';
+  const cleanName = name.replace(/\.ya?ml$/i, '');
+  if (cleanName) yaml += 'name: ' + cleanName + '\n';
   if (desc) yaml += 'description: ' + desc + '\n';
   if (recordType === 'array') yaml += 'record_type: array\n';
   if (instr) yaml += 'instructions: ' + yamlStr(instr) + '\n';
@@ -362,7 +363,7 @@ function buildYaml() {
   yaml += 'fields:\n';
   for (const f of fields) {
     if (!f.name.trim()) continue;
-    yaml += '  ' + f.name.trim() + ':\n';
+    yaml += '  ' + yamlStr(f.name.trim()) + ':\n';
     yaml += '    type: ' + f.type + '\n';
     if (f.description.trim()) yaml += '    description: ' + yamlStr(f.description.trim()) + '\n';
     if (f.type === 'enum' && f.values.trim()) {
@@ -373,7 +374,7 @@ function buildYaml() {
       yaml += '    fields:\n';
       for (const sf of f.subfields) {
         if (!sf.name.trim()) continue;
-        yaml += '      ' + sf.name.trim() + ':\n';
+        yaml += '      ' + yamlStr(sf.name.trim()) + ':\n';
         yaml += '        type: ' + sf.type + '\n';
         if (sf.description.trim()) yaml += '        description: ' + yamlStr(sf.description.trim()) + '\n';
         if (sf.type === 'enum' && sf.values && sf.values.trim()) {

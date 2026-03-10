@@ -197,35 +197,43 @@ import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvid
 // --- Firebase Auth setup ---
 const cfgResp = await fetch('/firebase-config');
 const firebaseConfig = await cfgResp.json();
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
-const provider = new GoogleAuthProvider();
-
-const signInBtn = document.getElementById('signInBtn');
-const signOutBtn = document.getElementById('signOutBtn');
-const overlaySignIn = document.getElementById('overlaySignIn');
-signInBtn.addEventListener('click', () => signInWithPopup(auth, provider));
-signOutBtn.addEventListener('click', () => signOut(auth));
-overlaySignIn.addEventListener('click', () => signInWithPopup(auth, provider));
 
 let _currentUser = null;
-onAuthStateChanged(auth, user => {
-  const bar = document.getElementById('authBar');
-  const overlay = document.getElementById('authOverlay');
-  bar.style.display = 'flex';
-  _currentUser = user;
-  if (user) {
-    overlay.style.display = 'none';
-    document.getElementById('userEmail').textContent = user.email;
-    signInBtn.style.display = 'none';
-    signOutBtn.style.display = '';
-  } else {
-    overlay.style.display = 'flex';
-    document.getElementById('userEmail').textContent = '';
-    signInBtn.style.display = '';
-    signOutBtn.style.display = 'none';
-  }
-});
+
+if (firebaseConfig.authDisabled) {
+  // Local dev mode — skip Firebase auth entirely
+  document.getElementById('authOverlay').style.display = 'none';
+  document.getElementById('authBar').style.display = 'none';
+} else {
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const provider = new GoogleAuthProvider();
+
+  const signInBtn = document.getElementById('signInBtn');
+  const signOutBtn = document.getElementById('signOutBtn');
+  const overlaySignIn = document.getElementById('overlaySignIn');
+  signInBtn.addEventListener('click', () => signInWithPopup(auth, provider));
+  signOutBtn.addEventListener('click', () => signOut(auth));
+  overlaySignIn.addEventListener('click', () => signInWithPopup(auth, provider));
+
+  onAuthStateChanged(auth, user => {
+    const bar = document.getElementById('authBar');
+    const overlay = document.getElementById('authOverlay');
+    bar.style.display = 'flex';
+    _currentUser = user;
+    if (user) {
+      overlay.style.display = 'none';
+      document.getElementById('userEmail').textContent = user.email;
+      signInBtn.style.display = 'none';
+      signOutBtn.style.display = '';
+    } else {
+      overlay.style.display = 'flex';
+      document.getElementById('userEmail').textContent = '';
+      signInBtn.style.display = '';
+      signOutBtn.style.display = 'none';
+    }
+  });
+}
 
 async function authFetch(url, opts = {}) {
   if (_currentUser) {
@@ -543,9 +551,6 @@ extractBtn.addEventListener('click', async () => {
   }
 
   let statusText = 'Done — ' + total + ' file' + (total > 1 ? 's' : '') + ' processed.';
-  if (resultsFile) {
-    statusText += '\nResults saved to output/' + resultsFile;
-  }
   if (warnings.length) {
     statusText += '\nWarnings:\n' + warnings.join('\n');
   }
@@ -567,8 +572,13 @@ extractBtn.addEventListener('click', async () => {
       results.innerHTML = '<p>Large result set (' + allResults.length + ' results) — downloaded as JSON.</p>';
     } else {
       const pre = document.createElement('pre');
-      pre.textContent = JSON.stringify(allResults.length === 1 ? allResults[0] : allResults, null, 2);
+      const jsonData = allResults.length === 1 ? allResults[0] : allResults;
+      pre.textContent = JSON.stringify(jsonData, null, 2);
       results.appendChild(pre);
+      const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+      const jsonUrl = URL.createObjectURL(jsonBlob);
+      results.insertAdjacentHTML('beforeend',
+        '<a class="download-btn" href="' + jsonUrl + '" download="extracted.json">Download JSON</a>');
     }
   }
 
@@ -660,6 +670,10 @@ function renderTable(records) {
   const url = URL.createObjectURL(blob);
   html += '<a class="download-btn" href="' + url + '" download="extracted.csv">Download CSV</a>';
 
+  const jsonBlob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+  const jsonUrl = URL.createObjectURL(jsonBlob);
+  html += '<a class="download-btn" href="' + jsonUrl + '" download="extracted.json">Download JSON</a>';
+
   results.innerHTML = html;
 }
 
@@ -671,12 +685,15 @@ function specToYaml(spec) {
     return s;
   }
   let y = '';
-  if (spec.name) y += 'name: ' + yamlStr(spec.name) + '\n';
+  if (spec.name) {
+    const cleanName = spec.name.replace(/\.ya?ml$/i, '');
+    y += 'name: ' + yamlStr(cleanName) + '\n';
+  }
   if (spec.record_type) y += 'record_type: ' + spec.record_type + '\n';
   if (spec.instructions) y += 'instructions: ' + yamlStr(spec.instructions) + '\n';
   y += '\nfields:\n';
   for (const [name, cfg] of Object.entries(spec.fields)) {
-    y += '  ' + name + ':\n';
+    y += '  ' + yamlStr(name) + ':\n';
     y += '    type: ' + cfg.type + '\n';
     if (cfg.description) y += '    description: ' + yamlStr(cfg.description) + '\n';
     if (cfg.values && cfg.values.length) y += '    values: [' + cfg.values.join(', ') + ']\n';

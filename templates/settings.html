@@ -139,33 +139,41 @@ import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvid
 // --- Firebase Auth ---
 const cfgResp = await fetch('/firebase-config');
 const firebaseConfig = await cfgResp.json();
-const firebaseApp = initializeApp(firebaseConfig);
-const auth = getAuth(firebaseApp);
-const provider = new GoogleAuthProvider();
-
-document.getElementById('signInBtn').addEventListener('click', () => signInWithPopup(auth, provider));
-document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
-document.getElementById('overlaySignIn').addEventListener('click', () => signInWithPopup(auth, provider));
 
 let _currentUser = null;
-onAuthStateChanged(auth, user => {
-  const bar = document.getElementById('authBar');
-  const overlay = document.getElementById('authOverlay');
-  bar.style.display = 'flex';
-  _currentUser = user;
-  if (user) {
-    overlay.style.display = 'none';
-    document.getElementById('userEmail').textContent = user.email;
-    document.getElementById('signInBtn').style.display = 'none';
-    document.getElementById('signOutBtn').style.display = '';
-    loadSettings();
-  } else {
-    overlay.style.display = 'flex';
-    document.getElementById('userEmail').textContent = '';
-    document.getElementById('signInBtn').style.display = '';
-    document.getElementById('signOutBtn').style.display = 'none';
-  }
-});
+
+if (firebaseConfig.authDisabled) {
+  document.getElementById('authOverlay').style.display = 'none';
+  document.getElementById('authBar').style.display = 'none';
+  loadSettings();
+} else {
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const provider = new GoogleAuthProvider();
+
+  document.getElementById('signInBtn').addEventListener('click', () => signInWithPopup(auth, provider));
+  document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
+  document.getElementById('overlaySignIn').addEventListener('click', () => signInWithPopup(auth, provider));
+
+  onAuthStateChanged(auth, user => {
+    const bar = document.getElementById('authBar');
+    const overlay = document.getElementById('authOverlay');
+    bar.style.display = 'flex';
+    _currentUser = user;
+    if (user) {
+      overlay.style.display = 'none';
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('signInBtn').style.display = 'none';
+      document.getElementById('signOutBtn').style.display = '';
+      loadSettings();
+    } else {
+      overlay.style.display = 'flex';
+      document.getElementById('userEmail').textContent = '';
+      document.getElementById('signInBtn').style.display = '';
+      document.getElementById('signOutBtn').style.display = 'none';
+    }
+  });
+}
 
 async function authFetch(url, opts = {}) {
   if (_currentUser) {

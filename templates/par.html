@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Petey — PAR Extractor</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #f8f9fa; color: #333; padding: 32px; max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
+  .dropzone {
+    border: 2px dashed #ccc; border-radius: 12px; padding: 40px; text-align: center;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s; margin-bottom: 16px;
+  }
+  .dropzone:hover, .dropzone.drag-over { border-color: #2563eb; background: #eff6ff; }
+  .dropzone p { color: #666; }
+  .file-list { font-size: 13px; color: #555; margin-bottom: 16px; }
+  .file-list span { font-weight: 600; }
+  button.extract {
+    background: #2563eb; color: #fff; border: none; padding: 10px 24px;
+    border-radius: 8px; font-size: 15px; cursor: pointer;
+  }
+  button.extract:hover { background: #1d4ed8; }
+  button.extract:disabled { background: #93c5fd; cursor: not-allowed; }
+  #status { margin-top: 16px; font-size: 14px; color: #555; white-space: pre-line; }
+  .results-area { margin-top: 24px; }
+  table.results { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.results th, table.results td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+  table.results th { background: #f0f0f0; position: sticky; top: 0; }
+  .table-wrap { max-height: 600px; overflow: auto; }
+  .download-btn {
+    display: inline-block; margin-top: 12px; margin-right: 8px; padding: 8px 16px;
+    background: #16a34a; color: #fff; border-radius: 6px; text-decoration: none; font-size: 14px;
+  }
+  .download-btn:hover { background: #15803d; }
+  .auth-overlay {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; z-index: 100;
+  }
+  .auth-bar { display: none; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 13px; }
+  .auth-bar button { padding: 4px 12px; border-radius: 4px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 13px; }
+  .auth-bar .sign-in-btn { background: #2563eb; color: #fff; border: none; }
+  .warning { color: #b45309; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<div class="auth-bar" id="authBar">
+  <span id="userEmail"></span>
+  <button id="signOutBtn" style="display:none;">Sign out</button>
+  <button id="signInBtn" class="sign-in-btn" style="display:none;">Sign in with Google</button>
+</div>
+<div class="auth-overlay" id="authOverlay">
+  <h2>PAR Extractor</h2>
+  <p>Sign in to get started</p>
+  <button id="overlaySignIn" style="padding:10px 24px; font-size:16px; border-radius:8px; border:none; background:#2563eb; color:#fff; cursor:pointer;">Sign in with Google</button>
+</div>
+
+<h1>PAR Decision Extractor</h1>
+<p class="subtitle">Upload one or more DHCR PAR decision PDFs. Uses few-shot prompting with validation and re-query for accurate extraction.</p>
+
+<div class="dropzone" id="dropzone">
+  <p id="dropLabel">Drop PDF files here, or click to select files or a folder</p>
+  <input type="file" id="fileInput" multiple accept=".pdf" hidden>
+  <input type="file" id="folderInput" webkitdirectory hidden>
+</div>
+<div class="file-list" id="fileList"></div>
+
+<button class="extract" id="extractBtn" disabled>Extract</button>
+<div id="status"></div>
+<div class="results-area" id="results"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+const cfgResp = await fetch('/firebase-config');
+const firebaseConfig = await cfgResp.json();
+
+let _currentUser = null;
+
+if (firebaseConfig.authDisabled) {
+  document.getElementById('authOverlay').style.display = 'none';
+  document.getElementById('authBar').style.display = 'none';
+} else {
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const provider = new GoogleAuthProvider();
+
+  document.getElementById('signInBtn').addEventListener('click', () => signInWithPopup(auth, provider));
+  document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
+  document.getElementById('overlaySignIn').addEventListener('click', () => signInWithPopup(auth, provider));
+
+  onAuthStateChanged(auth, user => {
+    document.getElementById('authBar').style.display = 'flex';
+    _currentUser = user;
+    if (user) {
+      document.getElementById('authOverlay').style.display = 'none';
+      document.getElementById('userEmail').textContent = user.email;
+      document.getElementById('signInBtn').style.display = 'none';
+      document.getElementById('signOutBtn').style.display = '';
+    } else {
+      document.getElementById('authOverlay').style.display = 'flex';
+      document.getElementById('userEmail').textContent = '';
+      document.getElementById('signInBtn').style.display = '';
+      document.getElementById('signOutBtn').style.display = 'none';
+    }
+  });
+}
+
+async function authFetch(url, opts = {}) {
+  if (_currentUser) {
+    const token = await _currentUser.getIdToken();
+    opts.headers = { ...(opts.headers || {}), 'Authorization': 'Bearer ' + token };
+  }
+  return fetch(url, opts);
+}
+
+// --- File handling ---
+let selectedFiles = [];
+const dz = document.getElementById('dropzone');
+const fi = document.getElementById('fileInput');
+const folderInput = document.getElementById('folderInput');
+const fileList = document.getElementById('fileList');
+const extractBtn = document.getElementById('extractBtn');
+const status = document.getElementById('status');
+const results = document.getElementById('results');
+
+function updateFileList() {
+  const pdfs = selectedFiles.filter(f => f.name.toLowerCase().endsWith('.pdf'));
+  selectedFiles = pdfs;
+  if (pdfs.length) {
+    fileList.innerHTML = '<span>' + pdfs.length + ' PDF' + (pdfs.length > 1 ? 's' : '') + ':</span> ' +
+      pdfs.map(f => f.name).join(', ');
+    extractBtn.disabled = false;
+  } else {
+    fileList.textContent = '';
+    extractBtn.disabled = true;
+  }
+}
+
+dz.addEventListener('click', (e) => {
+  if (e.shiftKey || e.metaKey) {
+    folderInput.click();
+  } else {
+    fi.click();
+  }
+});
+
+dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', (e) => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  selectedFiles = [...e.dataTransfer.files];
+  updateFileList();
+});
+
+fi.addEventListener('change', () => { selectedFiles = [...fi.files]; updateFileList(); });
+folderInput.addEventListener('change', () => { selectedFiles = [...folderInput.files]; updateFileList(); });
+
+// --- Extraction ---
+extractBtn.addEventListener('click', async () => {
+  extractBtn.disabled = true;
+  status.textContent = 'Extracting ' + selectedFiles.length + ' file' + (selectedFiles.length > 1 ? 's' : '') + '...';
+  results.innerHTML = '';
+
+  const form = new FormData();
+  for (const f of selectedFiles) {
+    form.append('files', f);
+  }
+
+  try {
+    const resp = await authFetch('/par/extract', { method: 'POST', body: form });
+    const data = await resp.json();
+
+    if (data.error) {
+      status.innerHTML = '<span style="color:#dc2626;">' + data.error + '</span>';
+      extractBtn.disabled = false;
+      return;
+    }
+
+    const allResults = Array.isArray(data) ? data : [data];
+    const errors = allResults.filter(r => r._error);
+    const ok = allResults.filter(r => !r._error);
+
+    let statusText = 'Done — ' + ok.length + ' extracted';
+    if (errors.length) statusText += ', ' + errors.length + ' error' + (errors.length > 1 ? 's' : '');
+    statusText += '.';
+    status.textContent = statusText;
+
+    if (ok.length) {
+      renderTable(ok);
+    }
+    if (errors.length) {
+      const errDiv = document.createElement('div');
+      errDiv.style.marginTop = '12px';
+      errDiv.innerHTML = errors.map(e =>
+        '<p class="warning">' + e._source_file + ': ' + e._error + '</p>'
+      ).join('');
+      results.appendChild(errDiv);
+    }
+  } catch (e) {
+    status.innerHTML = '<span style="color:#dc2626;">Request failed: ' + e.message + '</span>';
+  }
+
+  extractBtn.disabled = false;
+});
+
+// --- Render results ---
+const DISPLAY_FIELDS = [
+  'petitioner', 'petitioner_type', 'other_party',
+  'adm_review_docket', 'ra_docket', 'ra_case_type',
+  'address', 'apartment',
+  'determination', 'ra_determination',
+  'par_filed_date', 'ra_order_issued', 'ra_case_filed', 'issue_date',
+  '_source_file',
+];
+
+function renderTable(records) {
+  const keys = DISPLAY_FIELDS.filter(k => records.some(r => r[k] != null));
+
+  let html = '<div class="table-wrap"><table class="results"><thead><tr>';
+  for (const k of keys) html += '<th>' + k + '</th>';
+  html += '</tr></thead><tbody>';
+  for (const row of records) {
+    html += '<tr>';
+    for (const k of keys) {
+      let v = row[k];
+      let cls = '';
+      if (row._validation_warnings && row._validation_warnings.some(w => w.startsWith(k + ':'))) {
+        cls = ' class="warning"';
+      }
+      html += '<td' + cls + '>' + (v != null ? String(v).replace(/</g, '&lt;') : '') + '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table></div>';
+
+  // CSV download
+  const csvRows = [keys.join(',')];
+  for (const row of records) {
+    csvRows.push(keys.map(k => {
+      const s = row[k] != null ? String(row[k]) : '';
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(','));
+  }
+  const csvBlob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const csvUrl = URL.createObjectURL(csvBlob);
+  html += '<a class="download-btn" href="' + csvUrl + '" download="par_results.csv">Download CSV</a>';
+
+  // JSON download
+  const jsonBlob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+  const jsonUrl = URL.createObjectURL(jsonBlob);
+  html += '<a class="download-btn" href="' + jsonUrl + '" download="par_results.json">Download JSON</a>';
+
+  results.innerHTML = html;
+}
+</script>
+</body>
+</html>

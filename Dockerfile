@@ -9,6 +9,7 @@ COPY server/ server/
 COPY templates/ templates/
 COPY schemas/ schemas/
 
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir .
 
 # Firebase config is passed via env vars at deploy time:

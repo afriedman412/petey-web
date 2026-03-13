@@ -127,12 +127,16 @@ async def extract_endpoint(
         tmp.write(await file.read())
         tmp_path = tmp.name
     try:
-        text, info = extract_text(tmp_path)
+        if parser in ("marker", "aryn"):
+            text, info = "", []
+        else:
+            text, info = extract_text(tmp_path)
         warning = check_text_length(text)
         result = await async_extract(
             tmp_path, response_model,
             uid=uid, instructions=instructions,
             parser=parser, ocr_fallback=ocr_fallback,
+            text=text if info else None,
         )
         data = result.model_dump()
         if spec.get("record_type") == "array" and "items" in data:

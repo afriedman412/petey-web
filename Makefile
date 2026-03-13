@@ -18,10 +18,13 @@ run: venv
 build-base:
 	gcloud config set project petey-dev
 	gcloud artifacts repositories create petey --repository-format=docker --location=us-east1 || true
-	docker build -f Dockerfile.base -t $(BASE_IMAGE) .
-	docker push $(BASE_IMAGE)
+	docker buildx build --platform linux/amd64 -f Dockerfile.base -t $(BASE_IMAGE) --push .
 
 docker-build:
+	docker buildx build --platform linux/amd64 -f Dockerfile.base -t $(BASE_IMAGE) --load .
+	docker buildx build --platform linux/amd64 -t petey-web --load .
+
+docker-build-local:
 	docker build -f Dockerfile.base -t $(BASE_IMAGE) .
 	docker build -t petey-web .
 
@@ -32,7 +35,7 @@ docker-run:
 
 deploy:
 	gcloud config set project petey-dev
-	gcloud run deploy petey --source . --region=us-east1 --allow-unauthenticated
+	gcloud run deploy petey --source . --region=us-east1 --allow-unauthenticated --memory=1Gi
 
 clean:
 	rm -rf $(VENV)

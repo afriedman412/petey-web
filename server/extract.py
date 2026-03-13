@@ -61,6 +61,7 @@ async def async_extract(
     instructions: str = "",
     parser: str = "pymupdf",
     ocr_fallback: bool = False,
+    text: str | None = None,
 ) -> BaseModel:
     """Extract using the model/key from the user's settings."""
     settings = get_settings(uid)
@@ -90,6 +91,7 @@ async def async_extract(
         parser=parser,
         aryn_api_key=aryn_api_key,
         ocr_fallback=ocr_fallback,
+        text=text,
     )
 
 

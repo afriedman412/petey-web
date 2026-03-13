@@ -7,7 +7,7 @@ COPY server/ server/
 COPY templates/ templates/
 COPY schemas/ schemas/
 
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir "marker-pdf>=1.0.0" && pip install --no-cache-dir .
 
 # Firebase config is passed via env vars at deploy time:
 #   FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID

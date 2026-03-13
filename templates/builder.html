@@ -472,11 +472,10 @@ async function extractFile(file, spec, instr) {
   if (!resp.ok) {
     let msg = 'Extraction failed (status ' + resp.status + ')';
     try {
-      const errData = await resp.json();
+      const body = await resp.text();
+      const errData = JSON.parse(body);
       msg = errData.error || errData.detail || msg;
-    } catch (_) {
-      msg = await resp.text() || msg;
-    }
+    } catch (_) {}
     if (msg.includes('API key') || msg.includes('api key')) throw new ApiKeyError(msg);
     throw new Error(msg);
   }

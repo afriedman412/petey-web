@@ -13,7 +13,7 @@ from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 
 from server.auth import FirebaseAuthMiddleware, get_uid
 from server.extract import (
-    async_extract, load_schema,
+    async_extract, async_extract_pages, load_schema,
     list_schemas, SCHEMAS_DIR, _build_model,
     extract_text, check_text_length,
 )
@@ -127,29 +127,33 @@ async def extract_endpoint(
         tmp.write(await file.read())
         tmp_path = tmp.name
     try:
-        if parser == "docparse":
-            text, info = "", []
+        is_array = spec.get("record_type") == "array"
+        if is_array:
+            records = await async_extract_pages(
+                tmp_path, response_model,
+                uid=uid, instructions=instructions,
+                parser=parser,
+            )
+            rows = []
+            for chunk in records:
+                if not chunk.get("_error") and "items" in chunk:
+                    rows.extend(chunk["items"])
+            data = {"_source_file": file.filename, "records": rows}
         else:
             text, info = extract_text(tmp_path)
-        warning = check_text_length(text)
-        result = await async_extract(
-            tmp_path, response_model,
-            uid=uid, instructions=instructions,
-            parser=parser, ocr_fallback=ocr_fallback,
-            text=text if info else None,
-        )
-        data = result.model_dump()
-        if spec.get("record_type") == "array" and "items" in data:
-            data = {
-                "_source_file": file.filename,
-                "records": data["items"],
-            }
-        else:
+            warning = check_text_length(text)
+            result = await async_extract(
+                tmp_path, response_model,
+                uid=uid, instructions=instructions,
+                parser=parser, ocr_fallback=ocr_fallback,
+                text=text if info else None,
+            )
+            data = result.model_dump()
             data["_source_file"] = file.filename
-        if warning:
-            data["_warning"] = warning
-        if info:
-            data["_info"] = info
+            if warning:
+                data["_warning"] = warning
+            if info:
+                data["_info"] = info
     except Exception as e:
         data = {
             "_source_file": file.filename,
@@ -327,9 +331,6 @@ async def get_settings_endpoint(
         "anthropic_api_key": mask_key(
             settings.get("anthropic_api_key", "")
         ),
-        "docparse_api_key": mask_key(
-            settings.get("docparse_api_key", "")
-        ),
         "models": MODELS,
     }
 
@@ -353,11 +354,6 @@ async def save_settings(
         and "..." not in body["anthropic_api_key"]
     ):
         updates["anthropic_api_key"] = body["anthropic_api_key"]
-    if (
-        "docparse_api_key" in body
-        and "..." not in body["docparse_api_key"]
-    ):
-        updates["docparse_api_key"] = body["docparse_api_key"]
     settings = update_settings(uid, updates)
     return {
         "model": settings["model"],
@@ -366,9 +362,6 @@ async def save_settings(
         ),
         "anthropic_api_key": mask_key(
             settings.get("anthropic_api_key", "")
-        ),
-        "docparse_api_key": mask_key(
-            settings.get("docparse_api_key", "")
         ),
     }
 

@@ -127,7 +127,7 @@ async def extract_endpoint(
         tmp.write(await file.read())
         tmp_path = tmp.name
     try:
-        if parser in ("marker", "aryn"):
+        if parser == "docparse":
             text, info = "", []
         else:
             text, info = extract_text(tmp_path)

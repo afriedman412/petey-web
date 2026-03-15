@@ -82,14 +82,14 @@ async def async_extract(
                 "Add one in Settings before extracting."
             )
 
-    aryn_api_key = settings.get("aryn_api_key") or None
+    docparse_api_key = settings.get("docparse_api_key") or None
 
     return await _extract_async(
         pdf_path, response_model,
         model=model_id, api_key=api_key,
         instructions=instructions,
         parser=parser,
-        aryn_api_key=aryn_api_key,
+        docparse_api_key=docparse_api_key,
         ocr_fallback=ocr_fallback,
         text=text,
     )

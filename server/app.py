@@ -133,6 +133,7 @@ async def extract_endpoint(
                 tmp_path, response_model,
                 uid=uid, instructions=instructions,
                 parser=parser,
+                header_pages=spec.get("header_pages", 0),
             )
             rows = []
             for chunk in records:

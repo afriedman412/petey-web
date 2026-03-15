@@ -461,7 +461,6 @@ async function extractFile(file, spec, instr) {
   form.append('file', file);
   form.append('schema_spec', JSON.stringify(spec));
   if (instr) form.append('instructions', instr);
-  form.append('parser', document.getElementById('parserSelect').value);
   const resp = await authFetch('/extract', { method: 'POST', body: form });
   if (!resp.ok) {
     let msg = 'Extraction failed (status ' + resp.status + ')';

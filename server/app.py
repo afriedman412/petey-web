@@ -132,7 +132,7 @@ async def extract_endpoint(
             records = await async_extract_pages(
                 tmp_path, response_model,
                 uid=uid, instructions=instructions,
-                parser=parser,
+                parser=spec.get("parser", "tables"),
                 header_pages=spec.get("header_pages", 0),
                 page_range=spec.get("pages") or None,
             )
@@ -172,7 +172,6 @@ async def extract_stream_endpoint(
     file: UploadFile,
     schema_spec: str = Form(None),
     instructions: str = Form(""),
-    parser: str = Form("pymupdf"),
     uid: str = Depends(get_uid),
 ):
     """Streaming array extraction — emits NDJSON page progress then result."""
@@ -205,7 +204,7 @@ async def extract_stream_endpoint(
                 records = await async_extract_pages(
                     tmp_path, response_model,
                     uid=uid, instructions=instructions,
-                    parser=parser,
+                    parser=spec.get("parser", "tables"),
                     header_pages=spec.get("header_pages", 0),
                     page_range=spec.get("pages") or None,
                     on_result=on_result,
@@ -400,6 +399,9 @@ async def get_settings_endpoint(
         "anthropic_api_key": mask_key(
             settings.get("anthropic_api_key", "")
         ),
+        "mistral_api_key": mask_key(
+            settings.get("mistral_api_key", "")
+        ),
         "models": MODELS,
     }
 
@@ -423,6 +425,11 @@ async def save_settings(
         and "..." not in body["anthropic_api_key"]
     ):
         updates["anthropic_api_key"] = body["anthropic_api_key"]
+    if (
+        "mistral_api_key" in body
+        and "..." not in body["mistral_api_key"]
+    ):
+        updates["mistral_api_key"] = body["mistral_api_key"]
     settings = update_settings(uid, updates)
     return {
         "model": settings["model"],
@@ -431,6 +438,9 @@ async def save_settings(
         ),
         "anthropic_api_key": mask_key(
             settings.get("anthropic_api_key", "")
+        ),
+        "mistral_api_key": mask_key(
+            settings.get("mistral_api_key", "")
         ),
     }
 
@@ -500,6 +510,11 @@ async def settings_page():
 @app.get("/template-builder", response_class=HTMLResponse)
 async def template_builder_page():
     return _load_template("template_builder.html")
+
+
+@app.get("/about", response_class=HTMLResponse)
+async def about_page():
+    return _load_template("about.html")
 
 
 @app.get("/par", response_class=HTMLResponse)

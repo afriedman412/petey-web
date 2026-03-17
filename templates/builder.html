@@ -481,6 +481,8 @@ const results = document.getElementById('results');
 const fieldRows = document.getElementById('fieldRows');
 const extractBtn = document.getElementById('extractBtn');
 
+document.getElementById('instructions').addEventListener('input', () => updateExtractBtn());
+
 // Spice mode toggle
 document.getElementById('spiceToggle').addEventListener('click', e => {
   if (e.target.tagName !== 'BUTTON') return;
@@ -506,7 +508,7 @@ function updateSpiceMode() {
     instrHint.textContent = 'optional';
   } else {
     instrLabel.textContent = 'What data do you want?';
-    instrHint.textContent = 'Leave blank to infer from the document';
+    instrHint.textContent = 'Describe the data you want to extract';
   }
   updateExtractBtn();
 }
@@ -563,7 +565,12 @@ fi.addEventListener('change', e => {
   if (pdfs.length) setFiles(pdfs);
 });
 
+const MAX_FILES = 5000;
 function setFiles(files) {
+  if (files.length > MAX_FILES) {
+    files = files.slice(0, MAX_FILES);
+    alert('Maximum ' + MAX_FILES + ' documents at a time. Only the first ' + MAX_FILES + ' will be used.');
+  }
   selectedFiles = files;
   dropLabel.textContent = files.length === 1 ? files[0].name : files.length + ' PDFs selected';
   dz.classList.add('has-file');
@@ -571,9 +578,12 @@ function setFiles(files) {
 }
 
 function updateExtractBtn() {
-  if (spiceMode === 'mild' || spiceMode === 'medium') {
-    // mild/medium: just need a file (schema will be inferred if not provided)
+  if (spiceMode === 'mild') {
     extractBtn.disabled = !selectedFiles.length;
+  } else if (spiceMode === 'medium') {
+    // medium: need a file + instructions text
+    const instr = document.getElementById('instructions').value.trim();
+    extractBtn.disabled = !(selectedFiles.length && instr);
   } else {
     extractBtn.disabled = !(selectedFiles.length && fields.some(f => f.name.trim() && f.enabled));
   }
@@ -853,9 +863,8 @@ async function mildExtract() {
 extractBtn.addEventListener('click', async () => {
   if (!selectedFiles.length) return;
 
-  // Mild mode: always auto-infer. Medium: auto-infer if no schema fields defined.
-  const hasFields = fields.some(f => f.name.trim() && f.enabled);
-  if (spiceMode === 'mild' || (spiceMode === 'medium' && !hasFields)) {
+  // Mild mode: always auto-infer.
+  if (spiceMode === 'mild') {
     return mildExtract();
   }
 

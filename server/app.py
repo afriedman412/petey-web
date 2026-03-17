@@ -261,6 +261,8 @@ async def par_extract_endpoint(
     ]
     if not pdf_files:
         return JSONResponse({"error": "No PDF files found."}, 400)
+    if len(pdf_files) > 5000:
+        return JSONResponse({"error": "Maximum 5000 documents per batch."}, 400)
 
     # Save all uploads to temp files upfront (can't read UploadFile
     # inside the streaming generator after the request body is consumed)

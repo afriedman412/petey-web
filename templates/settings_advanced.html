@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Advanced Settings — Petey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:         #111111;
+  --surface:    #1c1c1c;
+  --surface-2:  #262626;
+  --border:     #333333;
+  --accent:     #d8572a;
+  --accent-h:   #e06b3e;
+  --accent-dim: rgba(216,87,42,0.12);
+  --amber:      #f7b538;
+  --green:      #86efac;
+  --danger:     #c32f27;
+  --text:       #f2ece4;
+  --text-muted: #db7c26;
+  --text-dim:   #999999;
+  --r:          8px;
+  --r-lg:       12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-top-link {
+  font-size: 0.78rem; color: var(--text-muted); text-decoration: none;
+  letter-spacing: 0.03em; transition: color 0.15s; align-self: flex-end;
+  padding-bottom: 0.2rem;
+}
+.page-top-link:hover { color: var(--text); }
+
+.auth-overlay {
+  position: fixed; inset: 0; background: rgba(11,15,26,0.97);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; flex-direction: column; gap: 1.25rem;
+}
+.auth-overlay h2 {
+  font-size: 2.8rem; font-weight: 800; letter-spacing: -0.05em; line-height: 1;
+}
+.auth-overlay p { color: var(--text-muted); font-size: 0.88rem; }
+.auth-overlay .overlay-btn {
+  padding: 11px 28px; font-size: 0.9rem; font-weight: 700; border-radius: 8px;
+  border: none; background: var(--accent); color: #000; cursor: pointer;
+  font-family: inherit; transition: background 0.15s;
+}
+.auth-overlay .overlay-btn:hover { background: var(--accent-h); }
+
+.main { max-width: 600px; margin: 0 auto; padding: 2.75rem 2rem 5rem; }
+
+.page-header { margin-bottom: 2.25rem; }
+.page-header h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 2.4rem; font-weight: 400; letter-spacing: -0.01em; line-height: 1;
+}
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 1.5rem 1.75rem; margin-bottom: 1.25rem;
+}
+.card-header {
+  padding-bottom: 0.85rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border);
+}
+.card-label {
+  font-size: 0.67rem; font-weight: 700; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--text-muted);
+}
+
+.field { margin-bottom: 1.1rem; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block; font-size: 0.8rem; font-weight: 500; color: var(--text-muted);
+  margin-bottom: 0.35rem; letter-spacing: 0.02em;
+}
+.field .hint { font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+input[type="number"] {
+  width: 100px; padding: 0.45rem 0.6rem; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 5px;
+  font-size: 0.83rem; font-family: inherit; color: var(--text);
+  transition: border-color 0.15s;
+}
+input:focus { outline: none; border-color: var(--accent); }
+
+.save-btn {
+  padding: 0.65rem 1.75rem; font-size: 0.88rem; font-weight: 700;
+  background: var(--accent); color: #000; border: none;
+  border-radius: 6px; cursor: pointer; font-family: inherit;
+  letter-spacing: 0.03em; transition: background 0.15s; margin-top: 0.5rem;
+}
+.save-btn:hover { background: var(--accent-h); }
+.save-btn:disabled { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); cursor: default; }
+
+.status { margin-top: 0.75rem; font-size: 0.82rem; }
+.status.ok { color: var(--green); }
+.status.err { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="auth-overlay" id="authOverlay" style="display:none">
+  <h2>Petey<span style="color:var(--accent)">.</span></h2>
+  <p>Sign in to manage settings</p>
+  <button id="overlaySignIn" class="overlay-btn">Sign in with Google</button>
+</div>
+
+<main class="main">
+
+  <div class="page-header">
+    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:0.5rem;">
+      <h1>Advanced<span style="color:var(--accent)">.</span></h1>
+      <div style="display:flex; gap:1.25rem; align-items:flex-end;">
+        <a class="page-top-link" href="/">Extractor</a>
+        <a class="page-top-link" href="/settings/page">Settings</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-label">Extraction</span>
+    </div>
+
+    <div class="field">
+      <label for="concurrency">LLM Concurrency</label>
+      <input type="number" id="concurrency" min="1" max="50" value="10">
+      <div class="hint">Simultaneous LLM calls per extraction. Higher = faster but may hit rate limits. (1-50)</div>
+    </div>
+
+    <div class="field">
+      <label for="parseMultiplier">Parse Concurrency Multiplier</label>
+      <input type="number" id="parseMultiplier" min="1" max="20" value="5">
+      <div class="hint">Parsing threads = LLM concurrency x this value. Higher keeps the LLM pipeline full. (1-20)</div>
+    </div>
+  </div>
+
+  <button class="save-btn" id="saveBtn">Save</button>
+  <div class="status" id="status"></div>
+
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+const cfgResp = await fetch('/firebase-config');
+const firebaseConfig = await cfgResp.json();
+
+let _currentUser = null;
+
+if (firebaseConfig.authDisabled) {
+  document.getElementById('authOverlay').style.display = 'none';
+  loadSettings();
+} else {
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const provider = new GoogleAuthProvider();
+
+  document.getElementById('overlaySignIn').addEventListener('click', () => signInWithPopup(auth, provider));
+
+  onAuthStateChanged(auth, user => {
+    _currentUser = user;
+    document.getElementById('authOverlay').style.display = user ? 'none' : 'flex';
+    if (user) loadSettings();
+  });
+}
+
+async function authFetch(url, opts = {}) {
+  if (_currentUser) {
+    const token = await _currentUser.getIdToken();
+    opts.headers = { ...(opts.headers || {}), 'Authorization': 'Bearer ' + token };
+  }
+  return fetch(url, opts);
+}
+
+const concurrencyInput = document.getElementById('concurrency');
+const parseMultInput = document.getElementById('parseMultiplier');
+const statusEl = document.getElementById('status');
+
+async function loadSettings() {
+  try {
+    const resp = await authFetch('/settings');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    concurrencyInput.value = data.concurrency || 10;
+    parseMultInput.value = data.parse_multiplier || 5;
+  } catch (_) {}
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  statusEl.textContent = '';
+
+  try {
+    const resp = await authFetch('/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        concurrency: parseInt(concurrencyInput.value, 10),
+        parse_multiplier: parseInt(parseMultInput.value, 10),
+      }),
+    });
+    if (!resp.ok) throw new Error('Save failed');
+    const data = await resp.json();
+    concurrencyInput.value = data.concurrency || 10;
+    parseMultInput.value = data.parse_multiplier || 5;
+    statusEl.className = 'status ok';
+    statusEl.textContent = 'Saved.';
+  } catch (e) {
+    statusEl.className = 'status err';
+    statusEl.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

@@ -15,14 +15,14 @@ from server.auth import FirebaseAuthMiddleware, get_uid
 from server.extract import (
     async_extract, async_extract_pages, load_schema,
     list_schemas, SCHEMAS_DIR, _build_model,
-    extract_text, check_text_length,
+    extract_text, check_text_length, async_infer_schema,
 )
 from server.par_extract import async_process_file as par_process_file, extract_text as par_extract_text
 from server.settings import (
     get_settings, update_settings, mask_key, get_provider, MODELS,
 )
 from server.validate_keys import (
-    validate_openai_key, validate_anthropic_key,
+    validate_openai_key, validate_anthropic_key, validate_mistral_key,
 )
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -196,11 +196,27 @@ async def extract_stream_endpoint(
     async def _stream():
         queue = asyncio.Queue()
 
+        import logging
+        slog = logging.getLogger("stream")
+        if not slog.handlers:
+            fh = logging.FileHandler(str(Path(__file__).resolve().parent.parent / "output" / "stream.log"))
+            fh.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+            slog.addHandler(fh)
+            slog.setLevel(logging.DEBUG)
+
+        def on_parse(label, total):
+            print(f"[stream] on_parse: {label} ({total} total)", flush=True)
+            slog.debug(f"on_parse: {label} ({total} total)")
+            queue.put_nowait(json.dumps({"type": "parse", "page": label, "total": total}) + "\n")
+
         def on_result(label, data):
-            queue.put_nowait(json.dumps({"type": "progress", "page": label}) + "\n")
+            print(f"[stream] on_result: {label}", flush=True)
+            slog.debug(f"on_result: {label} error={data.get('_error', None)}")
+            queue.put_nowait(json.dumps({"type": "extract", "page": label}) + "\n")
 
         async def run():
             try:
+                print(f"[stream] starting extract_pages for {filename}", flush=True)
                 records = await async_extract_pages(
                     tmp_path, response_model,
                     uid=uid, instructions=instructions,
@@ -208,13 +224,16 @@ async def extract_stream_endpoint(
                     header_pages=spec.get("header_pages", 0),
                     page_range=spec.get("pages") or None,
                     on_result=on_result,
+                    on_parse=on_parse,
                 )
+                print(f"[stream] extract_pages done, {len(records)} chunks", flush=True)
                 rows = []
                 for chunk in records:
                     if not chunk.get("_error") and "items" in chunk:
                         rows.extend(chunk["items"])
                 result = {"_source_file": filename, "records": rows}
             except Exception as e:
+                print(f"[stream] error: {e}", flush=True)
                 result = {"_source_file": filename, "_error": str(e)}
             finally:
                 Path(tmp_path).unlink(missing_ok=True)
@@ -224,6 +243,8 @@ async def extract_stream_endpoint(
         done = False
         while not done:
             msg = await queue.get()
+            slog.debug(f"yielding: {msg.strip()[:100]}")
+            print(f"[stream] yielding: {msg[:80]}...", flush=True)
             yield msg
             if json.loads(msg)["type"] == "result":
                 done = True
@@ -261,6 +282,8 @@ async def par_extract_endpoint(
     ]
     if not pdf_files:
         return JSONResponse({"error": "No PDF files found."}, 400)
+    if len(pdf_files) > 5000:
+        return JSONResponse({"error": "Maximum 5000 documents per batch."}, 400)
 
     # Save all uploads to temp files upfront (can't read UploadFile
     # inside the streaming generator after the request body is consumed)
@@ -376,6 +399,32 @@ async def results_append(request: Request):
     return {"ok": True}
 
 
+@app.post("/infer-schema")
+async def infer_schema_endpoint(
+    file: UploadFile,
+    ocr_fallback: bool = Form(False),
+    uid: str = Depends(get_uid),
+):
+    """Analyze a PDF and suggest an extraction schema."""
+    with tempfile.NamedTemporaryFile(
+        suffix=".pdf", delete=False
+    ) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+    try:
+        spec = await async_infer_schema(
+            tmp_path, uid=uid,
+            ocr_fallback=ocr_fallback,
+        )
+        return spec
+    except Exception as e:
+        return JSONResponse(
+            {"error": str(e)}, status_code=500,
+        )
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+
+
 @app.post("/parse-yaml")
 async def parse_yaml(request: Request):
     body = await request.json()
@@ -402,6 +451,8 @@ async def get_settings_endpoint(
         "mistral_api_key": mask_key(
             settings.get("mistral_api_key", "")
         ),
+        "concurrency": settings.get("concurrency", 10),
+        "parse_multiplier": settings.get("parse_multiplier", 5),
         "models": MODELS,
     }
 
@@ -430,6 +481,14 @@ async def save_settings(
         and "..." not in body["mistral_api_key"]
     ):
         updates["mistral_api_key"] = body["mistral_api_key"]
+    if "concurrency" in body:
+        updates["concurrency"] = max(
+            1, min(50, int(body["concurrency"]))
+        )
+    if "parse_multiplier" in body:
+        updates["parse_multiplier"] = max(
+            1, min(20, int(body["parse_multiplier"]))
+        )
     settings = update_settings(uid, updates)
     return {
         "model": settings["model"],
@@ -441,6 +500,10 @@ async def save_settings(
         ),
         "mistral_api_key": mask_key(
             settings.get("mistral_api_key", "")
+        ),
+        "concurrency": settings.get("concurrency", 10),
+        "parse_multiplier": settings.get(
+            "parse_multiplier", 5
         ),
     }
 
@@ -464,6 +527,8 @@ async def validate_key_endpoint(
         valid, message = await validate_openai_key(key)
     elif provider == "anthropic":
         valid, message = await validate_anthropic_key(key)
+    elif provider == "mistral":
+        valid, message = await validate_mistral_key(key)
     else:
         return JSONResponse(
             {"error": "Unknown provider"}, 400
@@ -505,6 +570,11 @@ async def builder_page():
 @app.get("/settings/page", response_class=HTMLResponse)
 async def settings_page():
     return _load_template("settings.html")
+
+
+@app.get("/settings/advanced", response_class=HTMLResponse)
+async def advanced_settings_page():
+    return _load_template("settings_advanced.html")
 
 
 @app.get("/template-builder", response_class=HTMLResponse)

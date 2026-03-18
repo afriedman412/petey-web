@@ -42,6 +42,7 @@ body {
   padding-bottom: 0.2rem;
 }
 .page-top-link:hover { color: var(--text); }
+.page-top-link.active { color: var(--text); font-weight: 600; }
 
 /* AUTH OVERLAY */
 .auth-overlay {
@@ -77,24 +78,7 @@ body {
 .hero-sub { font-size: 0.82rem; color: var(--text-muted); letter-spacing: 0.04em; }
 
 /* DROPZONE */
-.dropzone {
-  border: 1.5px dashed var(--border); border-radius: var(--r-lg);
-  padding: 2.75rem 2rem; text-align: center; cursor: pointer;
-  background: var(--surface); margin-bottom: 1.5rem;
-  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
-  background-size: 22px 22px; background-position: center;
-  transition: border-color 0.2s, background-color 0.2s;
-}
-.dropzone:hover, .dropzone.over {
-  border-color: var(--accent); background-color: var(--accent-dim);
-}
-.dropzone.has-file {
-  border-color: var(--green); border-style: solid;
-  background-color: rgba(52,211,153,0.05); background-image: none;
-}
-.dropzone p { font-size: 0.88rem; color: var(--text-muted); }
-.dropzone.has-file p { color: var(--green); font-weight: 500; }
-.dropzone input { display: none; }
+
 
 
 /* CONTROLS ROW */
@@ -247,23 +231,13 @@ body {
   margin: 0.75rem 0; font-size: 0.82rem; color: var(--text-muted);
   white-space: pre-line; line-height: 1.6;
 }
-#progressArea { margin-top: 1.25rem; }
-.progress-meta {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 0.35rem;
-}
-#progressPct { font-size: 0.72rem; color: var(--text-muted); }
 .progress-track {
   height: 2px; background: var(--surface-2); border-radius: 1px;
   overflow: hidden; margin-bottom: 0.5rem;
 }
-#progressBar {
-  height: 100%; background: var(--accent); border-radius: 1px;
-  width: 0%; transition: width 0.3s;
-}
 #progressLog {
   font-size: 0.72rem; color: var(--text-muted); max-height: 110px;
-  overflow-y: auto; line-height: 1.65;
+  overflow-y: auto; line-height: 1.65; margin-top: 0.5rem;
 }
 
 /* RESULTS */
@@ -327,18 +301,8 @@ table.results tr:hover td { background: var(--surface-2); }
 
 <main class="main">
 
-  <div class="hero">
-    <div class="hero-top">
-      <h1><a href="#" id="logoReset" style="color:inherit; text-decoration:none;">Petey<span class="dot">.</span></a></h1>
-      <div style="display:flex; gap:1.25rem; align-items:flex-end; padding-bottom:0.2rem;">
-        <a href="/about" class="page-top-link">About</a>
-        <a href="/settings/page" class="page-top-link">Settings</a>
-        <a href="https://github.com/afriedman412/petey" target="_blank" rel="noopener" class="page-top-link" title="GitHub" style="padding-bottom:0;"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
-        <a href="#" class="page-top-link" id="signOutLink" style="display:none;">Sign out</a>
-      </div>
-    </div>
-    <p class="hero-sub">Easy PDF Extraction</p>
-  </div>
+  <script src="/static/navbar.js"></script>
+  <nav-bar active="extractor" subtitle="Easy PDF Extraction"></nav-bar>
 
   <!-- Spice mode selector -->
   <div class="controls-row" style="margin-bottom:1.5rem;">
@@ -350,10 +314,8 @@ table.results tr:hover td { background: var(--surface-2); }
     </div>
   </div>
 
-  <div class="dropzone" id="dropzone">
-    <p id="dropLabel">Drop PDFs here, or click to select</p>
-    <input type="file" id="fileInput" accept=".pdf" multiple>
-  </div>
+  <script src="/static/dropzone.js"></script>
+  <drop-zone id="dropzone" max-files="5000"></drop-zone>
 
   <!-- Mode toggle: medium + spicy -->
   <div class="controls-row" data-spice-min="medium">
@@ -416,14 +378,6 @@ table.results tr:hover td { background: var(--surface-2); }
     <button class="save-btn" id="saveBtn" data-spice-min="medium">Download Schema</button>
   </div>
 
-  <div id="progressArea" style="display:none; margin-top:1.25rem;">
-    <div class="progress-meta">
-      <span id="progressPct">0%</span>
-    </div>
-    <div class="progress-track"><div id="progressBar"></div></div>
-    <div id="progressLog"></div>
-  </div>
-
   <div id="streamProgress" style="display:none; margin-top:1.25rem;">
     <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted); margin-bottom:0.25rem;">
       <span>Parsing</span><span id="parsePct">0 / ?</span>
@@ -433,6 +387,7 @@ table.results tr:hover td { background: var(--surface-2); }
       <span>Extracting</span><span id="extractPct">0 / ?</span>
     </div>
     <div class="progress-track"><div id="extractBar" style="height:100%; background:var(--accent); border-radius:1px; width:0%; transition:width 0.3s;"></div></div>
+    <div id="progressLog"></div>
     <button id="cancelRunBtn" style="margin-top:0.75rem; padding:0.4rem 1rem; font-size:0.78rem; font-weight:600; background:transparent; color:var(--danger); border:1px solid var(--danger); border-radius:5px; cursor:pointer; font-family:inherit; transition:all 0.15s;" onmouseover="this.style.background='var(--danger)';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='var(--danger)'">Cancel run</button>
   </div>
 
@@ -495,19 +450,113 @@ async function checkApiKeys() {
 
 function updateKeyGate() {
   const dz = document.getElementById('dropzone');
-  const dropLabel = document.getElementById('dropLabel');
-  const fi = document.getElementById('fileInput');
   if (!hasApiKey) {
-    fi.disabled = true;
-    dz.style.opacity = '0.6';
-    dz.style.cursor = 'default';
-    dropLabel.innerHTML = '<span style="font-size:1.3rem; font-weight:600; color:#fff;">Set your OpenAI or Anthropic API key in <a href="/settings/page" style="color:var(--accent); text-decoration:underline;">Settings</a> to get started</span>';
+    dz.setGateMessage('<span style="font-size:1.3rem; font-weight:600; color:#fff;">Set your OpenAI or Anthropic API key in <a href="/settings/page" style="color:var(--accent); text-decoration:underline;">Settings</a> to get started</span>');
   } else {
-    fi.disabled = false;
-    dz.style.opacity = '';
-    dz.style.cursor = '';
-    dropLabel.textContent = 'Drop PDFs here, or click to select';
+    dz.clearGate();
   }
+}
+
+// --- IndexedDB for run result caching ---
+function openRunsDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('petey_runs', 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('results')) {
+        db.createObjectStore('results', { keyPath: 'run_id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveRunResults(runId, records) {
+  const db = await openRunsDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('results', 'readwrite');
+    tx.objectStore('results').put({ run_id: runId, records, updated_at: Date.now() });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function appendRunResult(runId, record) {
+  const db = await openRunsDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('results', 'readwrite');
+    const store = tx.objectStore('results');
+    const req = store.get(runId);
+    req.onsuccess = () => {
+      const existing = req.result || { run_id: runId, records: [] };
+      existing.records.push(record);
+      existing.updated_at = Date.now();
+      store.put(existing);
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// --- Run tracking helpers ---
+let _activeRunId = null;
+
+async function startRun(filename, spec, instructions, totalPages) {
+  try {
+    const settingsResp = await authFetch('/settings');
+    const settings = await settingsResp.json();
+    const resp = await authFetch('/runs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename,
+        schema_spec: spec,
+        instructions: instructions || '',
+        spice_mode: spiceMode,
+        model: settings.model || '',
+        parser: spec.parser || document.getElementById('parserSelect')?.value || 'pymupdf',
+        ocr_backend: document.getElementById('ocrFallback')?.checked ? 'mistral' : 'none',
+        record_type: spec.record_type || 'single',
+        concurrency: settings.concurrency || 10,
+        total_pages: totalPages || 0,
+      }),
+    });
+    const run = await resp.json();
+    _activeRunId = run.id;
+    return run.id;
+  } catch (e) {
+    console.warn('Failed to create run:', e);
+    return null;
+  }
+}
+
+async function updateRunProgress(runId, updates) {
+  if (!runId) return;
+  try {
+    await authFetch('/runs/' + runId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    });
+  } catch (_) {}
+}
+
+async function finishRun(runId, status, pagesParsed, pagesExtracted) {
+  if (!runId) return;
+  _activeRunId = null;
+  try {
+    await authFetch('/runs/' + runId, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        status,
+        finished_at: new Date().toISOString(),
+        pages_parsed: pagesParsed || 0,
+        pages_extracted: pagesExtracted || 0,
+      }),
+    });
+  } catch (_) {}
 }
 
 // --- App logic ---
@@ -518,9 +567,7 @@ let spiceMode = localStorage.getItem('petey_spice') || 'mild';
 
 const SPICE_LEVELS = ['mild', 'medium', 'spicy'];
 
-const dz = document.getElementById('dropzone');
-const fi = document.getElementById('fileInput');
-const dropLabel = document.getElementById('dropLabel');
+const dzEl = document.getElementById('dropzone');
 const st = document.getElementById('status');
 const results = document.getElementById('results');
 const fieldRows = document.getElementById('fieldRows');
@@ -579,9 +626,7 @@ document.getElementById('logoReset').addEventListener('click', e => {
   selectedFiles = [];
   fields = [{ name: '', type: 'string', description: '', values: '', enabled: true }];
   recordType = 'single';
-  dropLabel.textContent = 'Drop PDFs here, or click to select';
-  dz.classList.remove('has-file');
-  fi.value = '';
+  dzEl.reset();
   document.getElementById('schemaName').value = '';
   document.getElementById('instructions').value = '';
   document.getElementById('headerPages').value = '0';
@@ -592,35 +637,38 @@ document.getElementById('logoReset').addEventListener('click', e => {
   renderFields();
   st.textContent = '';
   results.innerHTML = '';
-  document.getElementById('progressArea').style.display = 'none';
+  document.getElementById('streamProgress').style.display = 'none';
   updateExtractBtn();
 });
 
-// File drop
-dz.addEventListener('click', () => { if (hasApiKey) fi.click(); });
-dz.addEventListener('dragover', e => { e.preventDefault(); if (hasApiKey) dz.classList.add('over'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('over'));
-dz.addEventListener('drop', e => {
-  e.preventDefault(); dz.classList.remove('over');
-  if (!hasApiKey) return;
-  const pdfs = [...e.dataTransfer.files].filter(f => f.name.toLowerCase().endsWith('.pdf'));
-  if (pdfs.length) setFiles(pdfs);
-});
-fi.addEventListener('change', e => {
-  const pdfs = [...e.target.files].filter(f => f.name.toLowerCase().endsWith('.pdf'));
-  if (pdfs.length) setFiles(pdfs);
-});
+// File selection from dropzone component
+let _cachedPageCount = 0;
+let _perFilePages = {};
 
-const MAX_FILES = 5000;
-function setFiles(files) {
-  if (files.length > MAX_FILES) {
-    files = files.slice(0, MAX_FILES);
-    alert('Maximum ' + MAX_FILES + ' documents at a time. Only the first ' + MAX_FILES + ' will be used.');
+dzEl.addEventListener('files-selected', e => {
+  selectedFiles = e.detail.files;
+  _cachedPageCount = 0;
+  _perFilePages = {};
+  updateExtractBtn();
+  // Fire page count in background
+  if (selectedFiles.length > 0) {
+    const form = new FormData();
+    for (const f of selectedFiles) form.append('files', f);
+    authFetch('/page-count', { method: 'POST', body: form })
+      .then(r => r.json())
+      .then(data => {
+        _cachedPageCount = data.total_pages || 0;
+        _perFilePages = data.per_file || {};
+      })
+      .catch(() => {});
   }
-  selectedFiles = files;
-  dropLabel.textContent = files.length === 1 ? files[0].name : files.length + ' PDFs selected';
-  dz.classList.add('has-file');
-  updateExtractBtn();
+});
+
+function fileLabel(name) {
+  const pages = _perFilePages[name];
+  if (pages) return name + ' (' + pages + ' pg)';
+  if (Object.keys(_perFilePages).length === 0) return name;
+  return name;
 }
 
 function updateExtractBtn() {
@@ -825,6 +873,7 @@ async function extractFileStream(file, spec, instr, onEvent) {
 document.getElementById('cancelRunBtn').addEventListener('click', () => {
   if (!confirm('Cancel the current extraction? Progress will be lost.')) return;
   if (_streamAbort) { _streamAbort.abort(); _streamAbort = null; }
+  if (_activeRunId) { finishRun(_activeRunId, 'cancelled', 0, 0); }
   st.textContent = 'Cancelled.';
   document.getElementById('streamProgress').style.display = 'none';
   extractBtn.disabled = false;
@@ -867,6 +916,7 @@ async function mildExtract() {
 
   // Step 2: Extract with inferred schema
   const isTable = spec.record_type === 'array';
+  const runId = await startRun(selectedFiles[0].name, spec, instr);
   if (isTable) {
     st.textContent = 'Connecting...';
     const sp = document.getElementById('streamProgress');
@@ -874,23 +924,27 @@ async function mildExtract() {
   } else {
     st.textContent = 'Extracting data...';
   }
+  let mildParsed = 0, mildExtracted = 0, mildTotal = 0;
   try {
     let data;
     if (isTable) {
       const sp = document.getElementById('streamProgress');
-      let parsed = 0, extracted = 0, total = '?';
+      let total = '?';
       data = await extractFileStream(selectedFiles[0], spec, instr, evt => {
         if (evt.type === 'parse') {
-          parsed++;
+          mildParsed++;
           total = evt.total;
-          document.getElementById('parsePct').textContent = parsed + ' / ' + total;
-          document.getElementById('parseBar').style.width = (parsed / total * 100) + '%';
+          mildTotal = evt.total;
+          if (mildParsed === 1) updateRunProgress(runId, { total_pages: total });
+          document.getElementById('parsePct').textContent = mildParsed + ' / ' + total;
+          document.getElementById('parseBar').style.width = (mildParsed / total * 100) + '%';
           st.textContent = 'Parsing — page ' + evt.page;
         } else if (evt.type === 'extract') {
-          extracted++;
-          document.getElementById('extractPct').textContent = extracted + ' / ' + total;
-          document.getElementById('extractBar').style.width = (extracted / total * 100) + '%';
+          mildExtracted++;
+          document.getElementById('extractPct').textContent = mildExtracted + ' / ' + total;
+          document.getElementById('extractBar').style.width = (mildExtracted / total * 100) + '%';
           st.textContent = 'Extracting — page ' + evt.page;
+          if (mildExtracted % 10 === 0) updateRunProgress(runId, { pages_parsed: mildParsed, pages_extracted: mildExtracted });
         }
       });
       sp.style.display = 'none';
@@ -910,8 +964,13 @@ async function mildExtract() {
 
     if (data._error) {
       st.innerHTML = '<span style="color:#f87171;">' + data._error + '</span>';
+      finishRun(runId, 'error', 0, 0);
     } else {
       st.textContent = 'Done!';
+      // Save results to IndexedDB
+      const resultRecords = data.records && Array.isArray(data.records) ? data.records : [data];
+      saveRunResults(runId, resultRecords);
+      finishRun(runId, 'completed', mildParsed || 1, mildExtracted || 1);
       // Show results
       if (data.records && Array.isArray(data.records)) {
         renderTable(data.records);
@@ -922,7 +981,7 @@ async function mildExtract() {
         const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const jsonUrl = URL.createObjectURL(jsonBlob);
         results.insertAdjacentHTML('beforeend',
-          '<a class="download-btn" href="' + jsonUrl + '" download="extracted.json">Download JSON</a>');
+          '<a class="download-btn" href="' + jsonUrl + '" download="' + extractedFilename('json') + '">Download JSON</a>');
       }
       // Show inferred schema so user can save/reuse
       const schemaYaml = specToYaml(spec);
@@ -938,9 +997,14 @@ async function mildExtract() {
         '<a class="download-btn" href="' + schemaUrl + '" download="' + fname + '">Download Schema</a>');
     }
   } catch(e) {
-    const settingsLink = (e.message.includes('API key') || e.message.includes('api key'))
-      ? '<br><a href="/settings/page" style="color:var(--accent);">Go to Settings</a>' : '';
-    st.innerHTML = '<span style="color:#f87171;">' + e.message + '</span>' + settingsLink;
+    if (e.name === 'AbortError') {
+      finishRun(runId, 'cancelled', 0, 0);
+    } else {
+      finishRun(runId, 'error', 0, 0);
+      const settingsLink = (e.message.includes('API key') || e.message.includes('api key'))
+        ? '<br><a href="/settings/page" style="color:var(--accent);">Go to Settings</a>' : '';
+      st.innerHTML = '<span style="color:#f87171;">' + e.message + '</span>' + settingsLink;
+    }
   }
   extractBtn.disabled = false;
   updateExtractBtn();
@@ -966,13 +1030,7 @@ extractBtn.addEventListener('click', async () => {
   const instr = document.getElementById('instructions').value.trim();
   let completed = 0;
 
-  const progressArea = document.getElementById('progressArea');
-  const progressBar = document.getElementById('progressBar');
-  const progressPct = document.getElementById('progressPct');
   const progressLog = document.getElementById('progressLog');
-  progressArea.style.display = total > 1 ? 'block' : 'none';
-  progressBar.style.width = '0%';
-  progressPct.textContent = '0%';
   progressLog.innerHTML = '';
   // Reset stream progress bars
   document.getElementById('streamProgress').style.display = 'none';
@@ -991,6 +1049,45 @@ extractBtn.addEventListener('click', async () => {
     warnings.push('Could not init results file: ' + e.message);
   }
 
+  // Start run tracking
+  const filename = total === 1 ? selectedFiles[0].name : total + ' files';
+  const runId = await startRun(filename, spec, instr, _cachedPageCount || total);
+
+  // Show stream progress for all runs (two bars)
+  const sp = document.getElementById('streamProgress');
+  const useStream = recordType === 'table' && total === 1;
+  sp.style.display = '';
+  st.textContent = 'Extracting...';
+
+  // Track file-level progress for multi-file, page-level for single stream
+  let sent = 0, done = 0;
+  let spicyParsed = 0, spicyExtracted = 0;
+  let totalLabel = _cachedPageCount ? String(_cachedPageCount) : 'counting...';
+
+  // Background page count may still be in flight — poll for it
+  function updateTotalLabel() {
+    if (_cachedPageCount && totalLabel === 'counting...') {
+      totalLabel = String(_cachedPageCount);
+      updateRunProgress(runId, { total_pages: _cachedPageCount });
+    }
+  }
+
+  function updateBars() {
+    updateTotalLabel();
+    if (useStream) {
+      document.getElementById('parsePct').textContent = spicyParsed + ' / ' + totalLabel;
+      document.getElementById('parseBar').style.width = _cachedPageCount ? (spicyParsed / _cachedPageCount * 100) + '%' : '0%';
+      document.getElementById('extractPct').textContent = spicyExtracted + ' / ' + totalLabel;
+      document.getElementById('extractBar').style.width = _cachedPageCount ? (spicyExtracted / _cachedPageCount * 100) + '%' : '0%';
+    } else {
+      document.getElementById('parsePct').textContent = sent + ' / ' + total + ' files sent';
+      document.getElementById('parseBar').style.width = (sent / total * 100) + '%';
+      document.getElementById('extractPct').textContent = done + ' / ' + total + ' files done (' + totalLabel + ' pages)';
+      document.getElementById('extractBar').style.width = (done / total * 100) + '%';
+    }
+  }
+  updateBars();
+
   // Process in batches of CONCURRENCY
   let apiKeyError = null;
   for (let i = 0; i < total && !apiKeyError; i += CONCURRENCY) {
@@ -998,45 +1095,42 @@ extractBtn.addEventListener('click', async () => {
     for (let j = i; j < Math.min(i + CONCURRENCY, total); j++) {
       batch.push(selectedFiles[j]);
     }
-    const useStream = recordType === 'table' && total === 1;
-    if (useStream && completed === 0) {
-      st.textContent = 'Connecting...';
-      document.getElementById('streamProgress').style.display = '';
-    } else {
-      st.textContent = 'Processing ' + completed + ' / ' + total + '...';
-    }
 
     const promises = batch.map(async file => {
       if (apiKeyError) return;
+      sent++;
+      updateBars();
       const logEntry = document.createElement('div');
-      logEntry.textContent = file.name + ' — extracting...';
+      logEntry.textContent = fileLabel(file.name) + ' — extracting...';
       progressLog.appendChild(logEntry);
       progressLog.scrollTop = progressLog.scrollHeight;
+      st.textContent = fileLabel(file.name) + ' — extracting...';
       try {
         let data;
         if (useStream) {
-          const sp = document.getElementById('streamProgress');
-          sp.style.display = '';
-          let parsed = 0, extracted = 0, stotal = '?';
+          let stotal = '?';
           data = await extractFileStream(file, spec, instr, evt => {
             if (evt.type === 'parse') {
-              parsed++;
+              spicyParsed++;
               stotal = evt.total;
-              document.getElementById('parsePct').textContent = parsed + ' / ' + stotal;
-              document.getElementById('parseBar').style.width = (parsed / stotal * 100) + '%';
-              st.textContent = file.name + ' — parsing ' + evt.page;
+              if (spicyParsed === 1 && !_cachedPageCount) {
+                _cachedPageCount = stotal;
+                totalLabel = String(stotal);
+                updateRunProgress(runId, { total_pages: stotal });
+              }
+              updateBars();
+              st.textContent = fileLabel(file.name) + ' — parsing ' + evt.page;
             } else if (evt.type === 'extract') {
-              extracted++;
-              document.getElementById('extractPct').textContent = extracted + ' / ' + stotal;
-              document.getElementById('extractBar').style.width = (extracted / stotal * 100) + '%';
-              st.textContent = file.name + ' — extracting ' + evt.page;
+              spicyExtracted++;
+              updateBars();
+              st.textContent = fileLabel(file.name) + ' — extracting ' + evt.page;
+              if (spicyExtracted % 10 === 0) updateRunProgress(runId, { pages_parsed: spicyParsed, pages_extracted: spicyExtracted });
             }
           });
-          sp.style.display = 'none';
         } else {
           data = await extractFile(file, spec, instr);
         }
-        logEntry.textContent = file.name + (data._error ? ' — error' : ' — done');
+        logEntry.textContent = fileLabel(file.name) + (data._error ? ' — error' : ' — done');
         if (data._info && data._info.length) {
           for (const msg of data._info) {
             const infoEl = document.createElement('div');
@@ -1076,25 +1170,31 @@ extractBtn.addEventListener('click', async () => {
         warnings.push(file.name + ': ' + e.message);
       }
       completed++;
-      const pct = Math.round((completed / total) * 100);
-      progressBar.style.width = pct + '%';
-      progressPct.textContent = pct + '%';
+      done++;
+      updateBars();
     });
 
     await Promise.all(promises);
     if (apiKeyError) break;
   }
 
+  sp.style.display = 'none';
+
   if (apiKeyError) {
     st.innerHTML = '<span style="color:#f87171; font-weight:600;">' + apiKeyError + '</span>' +
       '<br><a href="/settings/page" style="color:var(--accent);">Go to Settings</a>';
+    finishRun(runId, 'error', spicyParsed || sent, spicyExtracted || done);
     extractBtn.disabled = false;
     updateExtractBtn();
     return;
   }
 
-  progressBar.style.width = '100%';
-  progressPct.textContent = '100%';
+  // Save results to IndexedDB and finish run
+  const allData = allRecords.length ? allRecords : allResults;
+  saveRunResults(runId, allData);
+  const finalParsed = spicyParsed || completed;
+  const finalExtracted = spicyExtracted || completed;
+  finishRun(runId, 'completed', finalParsed, finalExtracted);
   let statusText = 'Done — ' + total + ' file' + (total > 1 ? 's' : '') + ' processed.';
   if (warnings.length) {
     statusText += '\nWarnings:\n' + warnings.join('\n');
@@ -1123,13 +1223,24 @@ extractBtn.addEventListener('click', async () => {
       const jsonBlob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
       const jsonUrl = URL.createObjectURL(jsonBlob);
       results.insertAdjacentHTML('beforeend',
-        '<a class="download-btn" href="' + jsonUrl + '" download="extracted.json">Download JSON</a>');
+        '<a class="download-btn" href="' + jsonUrl + '" download="' + extractedFilename('json') + '">Download JSON</a>');
     }
   }
 
   extractBtn.disabled = false;
   updateExtractBtn();
 });
+
+function extractedFilename(ext) {
+  const d = new Date();
+  const ts = d.getFullYear().toString()
+    + String(d.getMonth() + 1).padStart(2, '0')
+    + String(d.getDate()).padStart(2, '0')
+    + '_' + String(d.getHours()).padStart(2, '0')
+    + String(d.getMinutes()).padStart(2, '0')
+    + String(d.getSeconds()).padStart(2, '0');
+  return 'extracted_' + ts + '.' + ext;
+}
 
 function triggerDownload(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -1150,12 +1261,12 @@ function autoDownloadCsv(records) {
         ? '"' + s.replace(/"/g, '""') + '"' : s;
     }).join(','));
   }
-  triggerDownload(new Blob([csvRows.join('\n')], { type: 'text/csv' }), 'extracted.csv');
+  triggerDownload(new Blob([csvRows.join('\n')], { type: 'text/csv' }), extractedFilename('csv'));
 }
 
 function autoDownloadJson(data) {
   const json = JSON.stringify(data, null, 2);
-  triggerDownload(new Blob([json], { type: 'application/json' }), 'extracted.json');
+  triggerDownload(new Blob([json], { type: 'application/json' }), extractedFilename('json'));
 }
 
 function flattenRecords(records) {
@@ -1213,11 +1324,11 @@ function renderTable(records) {
   }
   const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
-  html += '<a class="download-btn" href="' + url + '" download="extracted.csv">Download CSV</a>';
+  html += '<a class="download-btn" href="' + url + '" download="' + extractedFilename('csv') + '">Download CSV</a>';
 
   const jsonBlob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
   const jsonUrl = URL.createObjectURL(jsonBlob);
-  html += '<a class="download-btn" href="' + jsonUrl + '" download="extracted.json">Download JSON</a>';
+  html += '<a class="download-btn" href="' + jsonUrl + '" download="' + extractedFilename('json') + '">Download JSON</a>';
 
   results.innerHTML = html;
 }
@@ -1291,6 +1402,37 @@ renderFields();
 
 // Initialize spice mode from localStorage
 updateSpiceMode();
+
+// Load settings from URL params (e.g. from Runs page "Load settings")
+(function loadFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('run') && !params.has('schema')) return;
+
+  if (params.has('spice')) {
+    spiceMode = params.get('spice');
+    localStorage.setItem('petey_spice', spiceMode);
+    updateSpiceMode();
+  }
+  if (params.has('schema')) {
+    try {
+      const spec = JSON.parse(params.get('schema'));
+      document.getElementById('schemaName').value = spec.name || '';
+      if (spec.record_type === 'array') { recordType = 'table'; updateModeToggle(); }
+      if (spec.header_pages) document.getElementById('headerPages').value = spec.header_pages;
+      if (spec.pages) document.getElementById('pageRange').value = spec.pages;
+      fields = Object.entries(spec.fields || {}).map(([name, cfg]) => ({
+        name, type: cfg.type || 'string', description: cfg.description || '',
+        values: (cfg.values || []).join(', '), enabled: true,
+      }));
+      renderFields();
+    } catch (_) {}
+  }
+  if (params.has('instructions')) {
+    document.getElementById('instructions').value = params.get('instructions');
+  }
+  // Clean URL without reload
+  window.history.replaceState({}, '', '/');
+})();
 </script>
 </body>
 </html>

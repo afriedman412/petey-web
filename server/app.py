@@ -10,6 +10,7 @@ from pathlib import Path
 import yaml
 from fastapi import FastAPI, UploadFile, Form, Request, Depends
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 
 from server.auth import FirebaseAuthMiddleware, get_uid
 from server.extract import (
@@ -24,13 +25,18 @@ from server.settings import (
 from server.validate_keys import (
     validate_openai_key, validate_anthropic_key, validate_mistral_key,
 )
+from server.runs import (
+    create_run, update_run, finish_run, list_runs, get_run, delete_run,
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
+STATIC_DIR = BASE_DIR / "static"
 OUTPUT_DIR = BASE_DIR / "output"
 
 app = FastAPI()
 app.add_middleware(FirebaseAuthMiddleware)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 _schema_cache: dict[str, type] = {}
 
@@ -84,6 +90,27 @@ async def save_schema(request: Request):
         yaml.dump(spec, f, default_flow_style=False, sort_keys=False)
     _schema_cache.pop(filename, None)
     return {"file": filename, "name": spec.get("name")}
+
+
+@app.post("/page-count")
+async def page_count_endpoint(
+    files: list[UploadFile],
+):
+    """Count pages per PDF without extracting."""
+    import fitz
+    counts = {}
+    total = 0
+    for f in files:
+        data = await f.read()
+        try:
+            doc = fitz.open(stream=data, filetype="pdf")
+            n = len(doc)
+            doc.close()
+            counts[f.filename] = n
+            total += n
+        except Exception:
+            counts[f.filename] = 0
+    return {"total_pages": total, "file_count": len(files), "per_file": counts}
 
 
 @app.post("/extract")
@@ -535,6 +562,63 @@ async def validate_key_endpoint(
         )
 
     return {"valid": valid, "message": message}
+
+
+# ---------------------------------------------------------------------------
+# Run history endpoints
+# ---------------------------------------------------------------------------
+
+@app.post("/runs")
+async def create_run_endpoint(
+    request: Request,
+    uid: str = Depends(get_uid),
+):
+    body = await request.json()
+    run = create_run(uid, body)
+    return run
+
+
+@app.get("/runs/page", response_class=HTMLResponse)
+async def runs_page():
+    return _load_template("runs.html")
+
+
+@app.get("/runs/list")
+async def list_runs_endpoint(
+    uid: str = Depends(get_uid),
+):
+    return list_runs(uid)
+
+
+@app.get("/runs/{run_id}")
+async def get_run_endpoint(
+    run_id: str,
+    uid: str = Depends(get_uid),
+):
+    run = get_run(uid, run_id)
+    if not run:
+        return JSONResponse({"error": "Run not found"}, 404)
+    return run
+
+
+@app.patch("/runs/{run_id}")
+async def update_run_endpoint(
+    run_id: str,
+    request: Request,
+    uid: str = Depends(get_uid),
+):
+    body = await request.json()
+    run = update_run(uid, run_id, body)
+    return run
+
+
+@app.delete("/runs/{run_id}")
+async def delete_run_endpoint(
+    run_id: str,
+    uid: str = Depends(get_uid),
+):
+    delete_run(uid, run_id)
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------------------

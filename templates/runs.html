@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runs — Petey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:         #111111;
+  --surface:    #1c1c1c;
+  --surface-2:  #262626;
+  --border:     #333333;
+  --accent:     #d8572a;
+  --accent-h:   #e06b3e;
+  --accent-dim: rgba(216,87,42,0.12);
+  --amber:      #f7b538;
+  --green:      #86efac;
+  --danger:     #c32f27;
+  --text:       #f2ece4;
+  --text-muted: #db7c26;
+  --text-dim:   #999999;
+  --r:          8px;
+  --r-lg:       12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page-top-link {
+  font-size: 0.78rem; color: var(--text-muted); text-decoration: none;
+  letter-spacing: 0.03em; transition: color 0.15s; align-self: flex-end;
+  padding-bottom: 0.2rem;
+}
+.page-top-link:hover { color: var(--text); }
+
+.auth-overlay {
+  position: fixed; inset: 0; background: rgba(11,15,26,0.97);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; flex-direction: column; gap: 1.25rem;
+}
+.auth-overlay h2 {
+  font-size: 2.8rem; font-weight: 800; letter-spacing: -0.05em; line-height: 1;
+}
+.auth-overlay p { color: var(--text-muted); font-size: 0.88rem; }
+.auth-overlay .overlay-btn {
+  padding: 11px 28px; font-size: 0.9rem; font-weight: 700; border-radius: 8px;
+  border: none; background: var(--accent); color: #000; cursor: pointer;
+  font-family: inherit; transition: background 0.15s;
+}
+.auth-overlay .overlay-btn:hover { background: var(--accent-h); }
+
+.main { max-width: 900px; margin: 0 auto; padding: 2.75rem 2rem 5rem; }
+
+.page-header { margin-bottom: 2.25rem; }
+.page-header h1 {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 2.4rem; font-weight: 400; letter-spacing: -0.01em; line-height: 1;
+}
+
+.empty-state {
+  text-align: center; padding: 3rem; color: var(--text-dim); font-size: 0.9rem;
+}
+
+.runs-table {
+  width: 100%; border-collapse: collapse; font-size: 0.8rem;
+}
+.runs-table th {
+  text-align: left; font-size: 0.67rem; font-weight: 700;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--text-muted);
+  padding: 0.6rem 0.75rem; border-bottom: 1px solid var(--border);
+}
+.runs-table td {
+  padding: 0.65rem 0.75rem; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.runs-table tr { cursor: pointer; transition: background 0.1s; }
+.runs-table tbody tr:hover { background: var(--surface); }
+
+.status-badge {
+  display: inline-block; font-size: 0.68rem; font-weight: 600;
+  padding: 0.15rem 0.5rem; border-radius: 4px; letter-spacing: 0.02em;
+}
+.status-badge.completed { background: rgba(134,239,172,0.15); color: var(--green); }
+.status-badge.running { background: rgba(247,181,56,0.15); color: var(--amber); }
+.status-badge.partial { background: rgba(247,181,56,0.15); color: var(--amber); }
+.status-badge.cancelled { background: rgba(195,47,39,0.15); color: var(--danger); }
+.status-badge.error { background: rgba(195,47,39,0.15); color: var(--danger); }
+
+.run-detail {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 1.5rem 1.75rem; margin-bottom: 1.25rem;
+  display: none;
+}
+.run-detail.open { display: block; }
+.detail-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem; margin-bottom: 1rem;
+}
+.detail-item label {
+  display: block; font-size: 0.67rem; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+  margin-bottom: 0.2rem;
+}
+.detail-item span { font-size: 0.82rem; }
+
+.detail-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+.detail-btn {
+  padding: 0.5rem 1.25rem; font-size: 0.8rem; font-weight: 600;
+  border-radius: 6px; cursor: pointer; font-family: inherit;
+  transition: all 0.15s; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--text);
+}
+.detail-btn:hover { border-color: var(--accent); color: var(--accent); }
+.detail-btn.primary {
+  background: var(--accent); color: #000; border-color: var(--accent);
+}
+.detail-btn.primary:hover { background: var(--accent-h); }
+.detail-btn.danger { color: var(--danger); border-color: var(--danger); }
+.detail-btn.danger:hover { background: var(--danger); color: #000; }
+</style>
+</head>
+<body>
+
+<div class="auth-overlay" id="authOverlay" style="display:none">
+  <h2>Petey<span style="color:var(--accent)">.</span></h2>
+  <p>Sign in to view run history</p>
+  <button id="overlaySignIn" class="overlay-btn">Sign in with Google</button>
+</div>
+
+<main class="main">
+
+  <script src="/static/navbar.js"></script>
+  <nav-bar active="runs"></nav-bar>
+
+  <div id="runsContent">
+    <div class="empty-state">Loading...</div>
+  </div>
+
+  <div id="runDetail" class="run-detail"></div>
+
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+
+const cfgResp = await fetch('/firebase-config');
+const firebaseConfig = await cfgResp.json();
+
+let _currentUser = null;
+
+if (firebaseConfig.authDisabled) {
+  document.getElementById('authOverlay').style.display = 'none';
+  loadRuns();
+} else {
+  const firebaseApp = initializeApp(firebaseConfig);
+  const auth = getAuth(firebaseApp);
+  const provider = new GoogleAuthProvider();
+
+  document.getElementById('overlaySignIn').addEventListener('click', () => signInWithPopup(auth, provider));
+
+  onAuthStateChanged(auth, user => {
+    _currentUser = user;
+    document.getElementById('authOverlay').style.display = user ? 'none' : 'flex';
+    if (user) loadRuns();
+  });
+}
+
+async function authFetch(url, opts = {}) {
+  if (_currentUser) {
+    const token = await _currentUser.getIdToken();
+    opts.headers = { ...(opts.headers || {}), 'Authorization': 'Bearer ' + token };
+  }
+  return fetch(url, opts);
+}
+
+// ---------------------------------------------------------------------------
+// IndexedDB helpers
+// ---------------------------------------------------------------------------
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('petey_runs', 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('results')) {
+        db.createObjectStore('results', { keyPath: 'run_id' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getLocalResults(runId) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('results', 'readonly');
+    const req = tx.objectStore('results').get(runId);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Render
+// ---------------------------------------------------------------------------
+const content = document.getElementById('runsContent');
+const detail = document.getElementById('runDetail');
+let currentRuns = [];
+
+async function loadRuns() {
+  try {
+    const resp = await authFetch('/runs/list');
+    if (!resp.ok) throw new Error('Failed to load runs');
+    currentRuns = await resp.json();
+    renderTable();
+  } catch (e) {
+    content.innerHTML = '<div class="empty-state">Failed to load runs.</div>';
+  }
+}
+
+function formatDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    + ' ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+
+function duration(start, end) {
+  if (!start) return '—';
+  const s = new Date(start);
+  const e = end ? new Date(end) : new Date();
+  const sec = Math.round((e - s) / 1000);
+  if (sec < 60) return sec + 's';
+  const min = Math.floor(sec / 60);
+  return min + 'm ' + (sec % 60) + 's';
+}
+
+function renderTable() {
+  if (!currentRuns.length) {
+    content.innerHTML = '<div class="empty-state">No runs yet. Extract a PDF to get started.</div>';
+    return;
+  }
+
+  let html = '<table class="runs-table"><thead><tr>';
+  html += '<th>File</th><th>Status</th><th>Mode</th><th>Model</th>';
+  html += '<th>Files</th><th>Pages</th><th>Date</th><th>Duration</th>';
+  html += '</tr></thead><tbody>';
+
+  for (const run of currentRuns) {
+    const isMultiFile = run.filename && run.filename.includes(' files');
+    const fileCount = isMultiFile ? run.filename.replace(' files', '') : '1';
+    const pages = run.total_pages ? String(run.total_pages) : '—';
+    html += '<tr data-id="' + run.id + '">';
+    html += '<td style="font-weight:500; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + (run.filename || '—') + '</td>';
+    html += '<td><span class="status-badge ' + run.status + '">' + run.status + '</span></td>';
+    html += '<td>' + (run.spice_mode || '—') + '</td>';
+    html += '<td style="font-size:0.75rem;">' + (run.model || '—') + '</td>';
+    html += '<td>' + fileCount + '</td>';
+    html += '<td>' + pages + '</td>';
+    html += '<td style="font-size:0.75rem;">' + formatDate(run.started_at) + '</td>';
+    html += '<td style="font-size:0.75rem;">' + duration(run.started_at, run.finished_at) + '</td>';
+    html += '</tr>';
+  }
+
+  html += '</tbody></table>';
+  content.innerHTML = html;
+
+  // Click handlers
+  content.querySelectorAll('tr[data-id]').forEach(row => {
+    row.addEventListener('click', () => showDetail(row.dataset.id));
+  });
+}
+
+async function showDetail(runId) {
+  const run = currentRuns.find(r => r.id === runId);
+  if (!run) return;
+
+  const local = await getLocalResults(runId);
+  const hasResults = local && local.records && local.records.length > 0;
+
+  let html = '<div class="detail-grid">';
+  html += '<div class="detail-item"><label>File</label><span>' + (run.filename || '—') + '</span></div>';
+  html += '<div class="detail-item"><label>Status</label><span class="status-badge ' + run.status + '">' + run.status + '</span></div>';
+  html += '<div class="detail-item"><label>Spice</label><span>' + (run.spice_mode || '—') + '</span></div>';
+  html += '<div class="detail-item"><label>Model</label><span>' + (run.model || '—') + '</span></div>';
+  html += '<div class="detail-item"><label>Parser</label><span>' + (run.parser || '—') + '</span></div>';
+  html += '<div class="detail-item"><label>Record Type</label><span>' + (run.record_type || '—') + '</span></div>';
+  if (run.record_type === 'array') {
+    html += '<div class="detail-item"><label>Pages Parsed</label><span>' + run.pages_parsed + ' / ' + (run.total_pages || '?') + '</span></div>';
+    html += '<div class="detail-item"><label>Pages Extracted</label><span>' + run.pages_extracted + ' / ' + (run.total_pages || '?') + '</span></div>';
+  }
+  html += '<div class="detail-item"><label>Started</label><span>' + formatDate(run.started_at) + '</span></div>';
+  html += '<div class="detail-item"><label>Duration</label><span>' + duration(run.started_at, run.finished_at) + '</span></div>';
+  if (run.instructions) {
+    html += '<div class="detail-item" style="grid-column:1/-1;"><label>Instructions</label><span>' + run.instructions + '</span></div>';
+  }
+  html += '</div>';
+
+  html += '<div class="detail-actions">';
+  html += '<button class="detail-btn primary" id="detailLoad" data-id="' + run.id + '">Load settings in Extractor</button>';
+  if (hasResults) {
+    html += '<button class="detail-btn" id="detailDownloadJSON" data-id="' + run.id + '">Download JSON</button>';
+    html += '<button class="detail-btn" id="detailDownloadCSV" data-id="' + run.id + '">Download CSV</button>';
+  } else {
+    html += '<span style="font-size:0.75rem; color:var(--text-dim); align-self:center;">No cached results (extracted on another device or cleared)</span>';
+  }
+  html += '<button class="detail-btn danger" id="detailDelete" data-id="' + run.id + '" style="margin-left:auto;">Delete</button>';
+  html += '</div>';
+
+  detail.innerHTML = html;
+  detail.classList.add('open');
+  detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Wire up buttons
+  document.getElementById('detailLoad').addEventListener('click', () => {
+    // Encode run config into URL params and navigate to builder
+    const params = new URLSearchParams();
+    params.set('run', run.id);
+    if (run.schema_spec) params.set('schema', JSON.stringify(run.schema_spec));
+    if (run.instructions) params.set('instructions', run.instructions);
+    if (run.spice_mode) params.set('spice', run.spice_mode);
+    if (run.model) params.set('model', run.model);
+    if (run.parser) params.set('parser', run.parser);
+    window.location.href = '/?' + params.toString();
+  });
+
+  if (hasResults) {
+    document.getElementById('detailDownloadJSON').addEventListener('click', async () => {
+      const data = await getLocalResults(run.id);
+      const blob = new Blob([JSON.stringify(data.records, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url;
+      a.download = (run.filename || 'results').replace('.pdf', '') + '.json';
+      a.click(); URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('detailDownloadCSV').addEventListener('click', async () => {
+      const data = await getLocalResults(run.id);
+      if (!data.records || !data.records.length) return;
+      const rows = data.records;
+      const keys = Object.keys(rows[0]).filter(k => !k.startsWith('_'));
+      let csv = keys.join(',') + '\n';
+      for (const row of rows) {
+        csv += keys.map(k => {
+          const v = row[k] == null ? '' : String(row[k]);
+          return v.includes(',') || v.includes('"') || v.includes('\n')
+            ? '"' + v.replace(/"/g, '""') + '"' : v;
+        }).join(',') + '\n';
+      }
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url;
+      a.download = (run.filename || 'results').replace('.pdf', '') + '.csv';
+      a.click(); URL.revokeObjectURL(url);
+    });
+  }
+
+  document.getElementById('detailDelete').addEventListener('click', async () => {
+    if (!confirm('Delete this run from history?')) return;
+    await authFetch('/runs/' + run.id, { method: 'DELETE' });
+    // Also remove from IndexedDB
+    try {
+      const db = await openDB();
+      const tx = db.transaction('results', 'readwrite');
+      tx.objectStore('results').delete(run.id);
+    } catch (_) {}
+    detail.classList.remove('open');
+    currentRuns = currentRuns.filter(r => r.id !== run.id);
+    renderTable();
+  });
+}
+</script>
+</body>
+</html>

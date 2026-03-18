@@ -5,6 +5,7 @@ import httpx
 
 OPENAI_MODELS_URL = "https://api.openai.com/v1/models"
 ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages"
+MISTRAL_MODELS_URL = "https://api.mistral.ai/v1/models"
 
 
 async def validate_openai_key(api_key: str) -> tuple[bool, str]:
@@ -57,6 +58,25 @@ async def validate_anthropic_key(api_key: str) -> tuple[bool, str]:
         # 429 means valid key, just rate limited
         if resp.status_code == 429:
             return True, "Valid (rate limited)"
+        return False, f"Unexpected status {resp.status_code}"
+    except httpx.TimeoutException:
+        return False, "Request timed out"
+    except Exception as e:
+        return False, str(e)
+
+
+async def validate_mistral_key(api_key: str) -> tuple[bool, str]:
+    """Validate a Mistral key by listing models."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                MISTRAL_MODELS_URL,
+                headers={"Authorization": f"Bearer {api_key}"},
+            )
+        if resp.status_code == 200:
+            return True, "Valid"
+        if resp.status_code == 401:
+            return False, "Invalid API key"
         return False, f"Unexpected status {resp.status_code}"
     except httpx.TimeoutException:
         return False, "Request timed out"

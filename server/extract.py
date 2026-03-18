@@ -126,9 +126,13 @@ async def async_extract_pages(
     header_pages: int = 0,
     page_range: str | None = None,
     on_result=None,
+    on_parse=None,
 ) -> list[dict]:
     """Page-chunked extraction using the user's settings."""
     model_id, api_key = _get_api_key(uid)
+    settings = get_settings(uid)
+    concurrency = settings.get("concurrency", 10)
+    parse_multiplier = settings.get("parse_multiplier", 5)
     return await _extract_pages_async(
         pdf_path, response_model,
         model=model_id, api_key=api_key,
@@ -138,6 +142,9 @@ async def async_extract_pages(
         header_pages=header_pages,
         page_range=page_range,
         on_result=on_result,
+        on_parse=on_parse,
+        concurrency=concurrency,
+        parse_multiplier=parse_multiplier,
     )
 
 

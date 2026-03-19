@@ -140,9 +140,16 @@ body {
 
 /* FIELD ROWS */
 .field-row {
-  display: grid; grid-template-columns: 18px 1fr 92px 2fr 22px;
+  display: grid; grid-template-columns: 16px 18px 1fr 92px 2fr 22px;
   gap: 0.35rem; align-items: center; margin-bottom: 0.28rem;
 }
+.field-row .drag-handle {
+  cursor: grab; color: var(--text-dim); font-size: 0.7rem; user-select: none;
+  display: flex; align-items: center; justify-content: center;
+}
+.field-row .drag-handle:active { cursor: grabbing; }
+.field-row.dragging { opacity: 0.4; }
+.field-row.drag-over { border-top: 2px solid var(--accent); margin-top: -2px; }
 .field-row input[type=text], .field-row select {
   background: var(--surface-2); border: 1px solid var(--border);
   color: var(--text); padding: 0.27rem 0.4rem; font-size: 0.8rem;
@@ -698,13 +705,18 @@ document.getElementById('addField').addEventListener('click', () => {
   if (inputs.length) inputs[inputs.length - 1].focus();
 });
 
+let _dragIdx = null;
+
 function renderFields() {
   fieldRows.innerHTML = '';
   fields.forEach((f, i) => {
     if (f.enabled === undefined) f.enabled = true;
     const row = document.createElement('div');
     row.className = 'field-row' + (f.enabled ? '' : ' disabled');
+    row.draggable = true;
+    row.dataset.idx = i;
     row.innerHTML =
+      '<span class="drag-handle" title="Drag to reorder">⠿</span>' +
       '<input type="checkbox"' + (f.enabled ? ' checked' : '') + ' data-i="' + i + '" data-key="enabled" title="Include this field">' +
       '<input type="text" placeholder="Field name" value="' + esc(f.name) + '" data-i="' + i + '" data-key="name">' +
       '<select data-i="' + i + '" data-key="type">' +
@@ -715,6 +727,35 @@ function renderFields() {
       '</select>' +
       '<input type="text" placeholder="Description" value="' + esc(f.description) + '" data-i="' + i + '" data-key="description">' +
       '<button class="remove-btn" data-i="' + i + '">&times;</button>';
+
+    row.addEventListener('dragstart', e => {
+      _dragIdx = i;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', () => {
+      row.classList.remove('dragging');
+      fieldRows.querySelectorAll('.field-row').forEach(r => r.classList.remove('drag-over'));
+      _dragIdx = null;
+    });
+    row.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      row.classList.add('drag-over');
+    });
+    row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+    row.addEventListener('drop', e => {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      const from = _dragIdx;
+      const to = parseInt(row.dataset.idx);
+      if (from !== null && from !== to) {
+        const [moved] = fields.splice(from, 1);
+        fields.splice(to, 0, moved);
+        renderFields();
+      }
+    });
+
     fieldRows.appendChild(row);
 
     if (f.type === 'enum') {

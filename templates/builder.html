@@ -236,11 +236,21 @@ body {
 }
 .save-btn:hover { background: rgba(251,191,36,0.14); }
 
+.schema-btn {
+  padding: 0.38rem 0.9rem; font-size: 0.78rem; font-weight: 500;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-muted); border-radius: 5px; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
+}
+.schema-btn:hover { border-color: var(--accent); color: var(--accent); }
+
 /* STATUS + PROGRESS */
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 #status {
   margin: 0.75rem 0; font-size: 0.82rem; color: var(--text-muted);
   white-space: pre-line; line-height: 1.6;
 }
+#status.extracting { animation: pulse 1.5s ease-in-out infinite; }
 .progress-track {
   height: 2px; background: var(--surface-2); border-radius: 1px;
   overflow: hidden; margin-bottom: 0.5rem;
@@ -354,6 +364,11 @@ table.results tr:hover td { background: var(--surface-2); }
         <option value="mistral">Mistral</option>
       </select>
     </label>
+    <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.8rem; color:var(--text-muted); margin-left:0.5rem;">
+      Model
+      <select id="modelSelect" style="background:var(--surface-2); border:1px solid var(--border); border-radius:4px; color:var(--text); padding:0.2rem 0.4rem; font-size:0.78rem; font-family:inherit;">
+      </select>
+    </label>
   </div>
 
   <div class="card">
@@ -364,9 +379,12 @@ table.results tr:hover td { background: var(--surface-2); }
     <div id="fieldRows"></div>
     <div class="btn-row">
       <button class="btn-add" id="addField">+ Add field</button>
-      <button class="btn-ghost" id="yamlToggle">Import existing</button>
+      <button class="schema-btn" id="suggestFields">Suggest fields</button>
+      <input type="file" id="suggestFile" accept=".pdf" style="display:none;">
+      <button class="schema-btn" id="yamlToggle">Import</button>
       <input type="file" id="yamlFile" accept=".yaml,.yml" style="display:none;">
-      <button class="btn-ghost" id="previewSchema" style="margin-left:auto;">Preview schema</button>
+      <button class="schema-btn" id="previewSchema">Preview</button>
+      <button class="schema-btn" id="saveBtn">Download</button>
     </div>
   </div>
 
@@ -381,7 +399,6 @@ table.results tr:hover td { background: var(--surface-2); }
 
   <div class="action-row">
     <button class="extract-btn" id="extractBtn" disabled>Extract</button>
-    <button class="save-btn" id="saveBtn">Download Schema</button>
   </div>
 
   <div id="streamProgress" style="display:none; margin-top:1.25rem;">
@@ -442,6 +459,28 @@ async function authFetch(url, opts = {}) {
 
 // --- Key check ---
 let hasApiKey = false;
+let _hasOpenaiKey = false;
+let _hasAnthropicKey = false;
+let _models = [];
+
+function getSelectedProvider() {
+  const modelId = document.getElementById('modelSelect').value || '';
+  const m = _models.find(x => x.id === modelId);
+  return m ? m.provider : (modelId.includes('claude') ? 'anthropic' : 'openai');
+}
+
+function checkModelKeyMatch() {
+  const provider = getSelectedProvider();
+  const hasKey = provider === 'anthropic' ? _hasAnthropicKey : _hasOpenaiKey;
+  const dz = document.getElementById('dropzone');
+  if (!hasKey && hasApiKey) {
+    dz.setGateMessage('<span style="font-size:1.1rem; font-weight:600; color:#fff;">The selected model requires ' +
+      (provider === 'anthropic' ? 'an Anthropic' : 'an OpenAI') +
+      ' API key. Add one in <a href="/settings/page" style="color:var(--accent); text-decoration:underline;">Settings</a> or choose a different model.</span>');
+  } else {
+    updateKeyGate();
+  }
+}
 
 async function checkApiKeys() {
   try {
@@ -449,9 +488,23 @@ async function checkApiKeys() {
     if (!resp.ok) return;
     const data = await resp.json();
     const hasKey = k => k && k.length > 0;
-    hasApiKey = hasKey(data.openai_api_key) || hasKey(data.anthropic_api_key);
+    _hasOpenaiKey = hasKey(data.openai_api_key);
+    _hasAnthropicKey = hasKey(data.anthropic_api_key);
+    hasApiKey = _hasOpenaiKey || _hasAnthropicKey;
+    _models = data.models || [];
+
+    const sel = document.getElementById('modelSelect');
+    sel.innerHTML = '';
+    for (const m of _models) {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name;
+      sel.appendChild(opt);
+    }
+    sel.value = data.model;
+    sel.addEventListener('change', checkModelKeyMatch);
   } catch(_) {}
-  updateKeyGate();
+  checkModelKeyMatch();
 }
 
 function updateKeyGate() {
@@ -767,6 +820,8 @@ document.getElementById('yamlFile').addEventListener('change', e => {
       recordType = spec.mode === 'table' ? 'table' : 'query';
       document.getElementById('headerPages').value = spec.header_pages || 0;
       document.getElementById('pageRange').value = spec.pages || '';
+      if (spec.parser) document.getElementById('parserSelect').value = spec.parser;
+      if (spec.model) document.getElementById('modelSelect').value = spec.model;
       updateModeToggle();
       fields = Object.entries(spec.fields || {}).map(([name, cfg]) => ({
         name, type: cfg.type, description: cfg.description || '',
@@ -776,6 +831,46 @@ document.getElementById('yamlFile').addEventListener('change', e => {
     }).catch(() => alert('Invalid YAML file'));
   };
   reader.readAsText(file);
+});
+
+// Suggest fields from a sample PDF
+document.getElementById('suggestFields').addEventListener('click', () => {
+  document.getElementById('suggestFile').click();
+});
+
+document.getElementById('suggestFile').addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const btn = document.getElementById('suggestFields');
+  const origText = btn.textContent;
+  btn.textContent = 'Analyzing...';
+  btn.disabled = true;
+  try {
+    const form = new FormData();
+    form.append('file', file);
+    const resp = await authFetch('/infer-schema', { method: 'POST', body: form });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || 'Schema inference failed');
+    }
+    const spec = await resp.json();
+    if (spec.name) document.getElementById('schemaName').value = spec.name;
+    if (spec.mode === 'table') {
+      recordType = 'table';
+      updateModeToggle();
+    }
+    fields = Object.entries(spec.fields || {}).map(([name, cfg]) => ({
+      name, type: cfg.type || 'string', description: cfg.description || '',
+      values: (cfg.values || []).join(', '), enabled: true,
+    }));
+    renderFields();
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.textContent = origText;
+    btn.disabled = false;
+    e.target.value = '';
+  }
 });
 
 // Build schema spec from fields (only enabled ones)
@@ -792,6 +887,10 @@ function buildSpec() {
   if (pr) spec.pages = pr;
   const instr = document.getElementById('instructions').value.trim();
   if (instr) spec.instructions = instr;
+  const parser = document.getElementById('parserSelect').value;
+  if (parser && parser !== 'pymupdf') spec.parser = parser;
+  const model = document.getElementById('modelSelect').value;
+  if (model) spec.model = model;
   spec.fields = {};
   for (const f of fields) {
     if (!f.name.trim() || !f.enabled) continue;
@@ -831,6 +930,7 @@ async function extractFile(file, spec, instr) {
   form.append('parser', document.getElementById('parserSelect').value);
   const ocrVal = document.getElementById('ocrSelect').value;
   if (ocrVal && ocrVal !== 'none') form.append('ocr_backend', ocrVal);
+  form.append('model', document.getElementById('modelSelect').value);
   const resp = await authFetch('/extract', { method: 'POST', body: form });
   if (!resp.ok) {
     let msg = 'Extraction failed (status ' + resp.status + ')';
@@ -853,6 +953,10 @@ async function extractFileStream(file, spec, instr, onEvent) {
   form.append('file', file);
   form.append('schema_spec', JSON.stringify(spec));
   if (instr) form.append('instructions', instr);
+  form.append('parser', document.getElementById('parserSelect').value);
+  const ocrVal = document.getElementById('ocrSelect').value;
+  if (ocrVal && ocrVal !== 'none') form.append('ocr_backend', ocrVal);
+  form.append('model', document.getElementById('modelSelect').value);
   const resp = await authFetch('/extract/stream', { method: 'POST', body: form, signal: _streamAbort.signal });
   if (!resp.ok) {
     let msg = 'Extraction failed (status ' + resp.status + ')';
@@ -889,6 +993,7 @@ document.getElementById('cancelRunBtn').addEventListener('click', () => {
   if (_streamAbort) { _streamAbort.abort(); _streamAbort = null; }
   if (_activeRunId) { finishRun(_activeRunId, 'cancelled', 0, 0); }
   st.textContent = 'Cancelled.';
+  st.classList.remove('extracting');
   document.getElementById('streamProgress').style.display = 'none';
   extractBtn.disabled = false;
   updateExtractBtn();
@@ -902,6 +1007,7 @@ extractBtn.addEventListener('click', async () => {
 
   results.innerHTML = '';
   extractBtn.disabled = true;
+  st.classList.add('extracting');
   const warnings = [];
   const allRecords = [];
   const allResults = [];
@@ -1064,6 +1170,7 @@ extractBtn.addEventListener('click', async () => {
     st.innerHTML = '<span style="color:#f87171; font-weight:600;">' + apiKeyError + '</span>' +
       '<br><a href="/settings/page" style="color:var(--accent);">Go to Settings</a>';
     finishRun(runId, 'error', spicyParsed || sent, spicyExtracted || done);
+    st.classList.remove('extracting');
     extractBtn.disabled = false;
     updateExtractBtn();
     return;
@@ -1102,6 +1209,7 @@ extractBtn.addEventListener('click', async () => {
     }
   }
 
+  st.classList.remove('extracting');
   extractBtn.disabled = false;
   updateExtractBtn();
 });

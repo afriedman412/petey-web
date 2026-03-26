@@ -125,10 +125,13 @@ async def extract_endpoint(
     parser: str = Form("pymupdf"),
     ocr_fallback: bool = Form(False),
     ocr_backend: str = Form("none"),
+    model: str = Form(None),
     uid: str = Depends(get_uid),
 ):
     # Check that the user has the required API key before processing
     settings = get_settings(uid)
+    if model:
+        settings["model"] = model
     provider = get_provider(settings["model"])
     if provider == "anthropic" and not settings.get("anthropic_api_key"):
         return JSONResponse(
@@ -186,7 +189,7 @@ async def extract_endpoint(
                 ocr_backend=ocr_backend,
                 text=text if info else None,
             )
-            data = result.model_dump()
+            data = result.model_dump(by_alias=True)
             data["_source_file"] = file.filename
             if warning:
                 data["_warning"] = warning
@@ -208,10 +211,15 @@ async def extract_stream_endpoint(
     file: UploadFile,
     schema_spec: str = Form(None),
     instructions: str = Form(""),
+    parser: str = Form("pymupdf"),
+    ocr_backend: str = Form("none"),
+    model: str = Form(None),
     uid: str = Depends(get_uid),
 ):
     """Streaming array extraction — emits NDJSON page progress then result."""
     settings = get_settings(uid)
+    if model:
+        settings["model"] = model
     provider = get_provider(settings["model"])
     if provider == "anthropic" and not settings.get("anthropic_api_key"):
         return JSONResponse({"error": "No Anthropic API key configured."}, 400)

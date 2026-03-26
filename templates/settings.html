@@ -35,24 +35,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* PAGE TOP LINK */
-.page-top-link {
-  font-size: 0.78rem; color: var(--text-muted); text-decoration: none;
-  letter-spacing: 0.03em; transition: color 0.15s; align-self: flex-end;
-  padding-bottom: 0.2rem;
-}
-.page-top-link:hover { color: var(--text); }
-.page-top-link.active { color: var(--text); font-weight: 600; }
-
 /* AUTH OVERLAY */
 .auth-overlay {
   position: fixed; inset: 0; background: rgba(11,15,26,0.97);
   display: flex; align-items: center; justify-content: center;
   z-index: 100; flex-direction: column; gap: 1.25rem;
 }
-.auth-overlay h2 {
-  font-size: 2.8rem; font-weight: 800; letter-spacing: -0.05em; line-height: 1;
-}
+.auth-overlay h2 { font-size: 2.8rem; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
 .auth-overlay p { color: var(--text-muted); font-size: 0.88rem; }
 .auth-overlay .overlay-btn {
   padding: 11px 28px; font-size: 0.9rem; font-weight: 700; border-radius: 8px;
@@ -63,13 +52,6 @@ body {
 
 /* MAIN */
 .main { max-width: 600px; margin: 0 auto; padding: 2.75rem 2rem 5rem; }
-
-/* PAGE HEADER */
-.page-header { margin-bottom: 2.25rem; }
-.page-header h1 {
-  font-family: 'DM Serif Display', Georgia, serif;
-  font-size: 2.4rem; font-weight: 400; letter-spacing: -0.01em; line-height: 1;
-}
 
 /* CARD */
 .card {
@@ -105,25 +87,41 @@ select option { background: var(--surface-2); color: var(--text); }
 input::placeholder { color: var(--text-dim); }
 
 /* KEY ROW */
-.key-row { display: flex; gap: 0.5rem; }
-.key-row input { flex: 1; }
-.key-row button {
-  padding: 0.45rem 0.85rem; border: 1px solid var(--border); border-radius: 5px;
+.key-entry { margin-bottom: 1rem; }
+.key-entry:last-child { margin-bottom: 0; }
+.key-top { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.35rem; }
+.key-top select { width: auto; min-width: 9rem; }
+.key-top input { flex: 1; }
+.key-top button {
+  padding: 0.45rem 0.75rem; border: 1px solid var(--border); border-radius: 5px;
   background: var(--surface-2); color: var(--text-muted); cursor: pointer;
   font-size: 0.75rem; font-family: inherit; white-space: nowrap; transition: all 0.15s;
 }
-.key-row button:hover { border-color: var(--text-muted); color: var(--text); }
+.key-top button:hover { border-color: var(--text-muted); color: var(--text); }
+.key-top .validate-btn:hover { border-color: var(--accent); color: var(--accent); }
+.key-top .remove-key { border-color: transparent; color: var(--text-dim); font-size: 1rem; padding: 0.3rem 0.5rem; }
+.key-top .remove-key:hover { color: var(--danger); }
 
-.validate-btn {
-  padding: 0.45rem 0.85rem; border: 1px solid var(--border); border-radius: 5px;
-  background: var(--surface-2); color: var(--text-muted); cursor: pointer;
-  font-size: 0.75rem; font-family: inherit; white-space: nowrap; transition: all 0.15s;
-}
-.validate-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-.key-status { font-size: 0.72rem; margin-top: 0.3rem; }
+.key-status { font-size: 0.72rem; margin-top: 0.2rem; }
 .key-status.valid { color: var(--green); }
 .key-status.invalid { color: var(--danger); }
+@keyframes fadeStatus { from { opacity: 1; } to { opacity: 0; } }
+.key-status.fade { animation: fadeStatus 0.5s 2s forwards; }
+
+/* ADD KEY BTN */
+.btn-add-key {
+  padding: 0.32rem 0.8rem; font-size: 0.78rem; border: 1px solid var(--border);
+  border-radius: 4px; background: var(--surface-2); color: var(--text-muted);
+  cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.btn-add-key:hover { border-color: var(--accent); color: var(--accent); }
+
+/* INFO BANNER */
+.info-banner {
+  font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;
+  padding: 0.6rem 0.75rem; background: var(--surface-2); border-radius: 5px;
+  border-left: 2px solid var(--border);
+}
 
 /* SAVE BUTTON */
 .save-btn {
@@ -133,19 +131,11 @@ input::placeholder { color: var(--text-dim); }
   letter-spacing: 0.03em; transition: background 0.15s; margin-top: 0.5rem;
 }
 .save-btn:hover { background: var(--accent-h); }
-.save-btn:disabled { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); cursor: default; }
 
 /* STATUS */
 .status { margin-top: 0.75rem; font-size: 0.82rem; }
 .status.ok { color: var(--green); }
 .status.err { color: var(--danger); }
-
-/* API KEY INFO BANNER */
-.info-banner {
-  font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;
-  padding: 0.6rem 0.75rem; background: var(--surface-2); border-radius: 5px;
-  border-left: 2px solid var(--border);
-}
 </style>
 </head>
 <body>
@@ -164,65 +154,13 @@ input::placeholder { color: var(--text-dim); }
 
   <div class="card">
     <div class="card-header">
-      <span class="card-label">Model</span>
-    </div>
-    <div class="field">
-      <label for="model">Extraction model</label>
-      <select id="model"></select>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
       <span class="card-label">API Keys</span>
     </div>
     <div class="info-banner">
-      Keys are stored securely per-user and never returned in full. Leave a field unchanged to keep the existing key.
+      Keys are stored securely per-user and never returned in full.
     </div>
-
-    <div class="field">
-      <label for="openai_key">OpenAI API Key</label>
-      <div class="key-row">
-        <input type="password" id="openai_key" placeholder="sk-..." autocomplete="off">
-        <button type="button" id="toggleOpenai">Show</button>
-        <button type="button" class="validate-btn" id="validateOpenai">Validate</button>
-      </div>
-      <div class="hint">Required for GPT models</div>
-      <div class="key-status" id="openaiKeyStatus"></div>
-    </div>
-
-    <div class="field">
-      <label for="anthropic_key">Anthropic API Key</label>
-      <div class="key-row">
-        <input type="password" id="anthropic_key" placeholder="sk-ant-..." autocomplete="off">
-        <button type="button" id="toggleAnthropic">Show</button>
-        <button type="button" class="validate-btn" id="validateAnthropic">Validate</button>
-      </div>
-      <div class="hint">Required for Claude models</div>
-      <div class="key-status" id="anthropicKeyStatus"></div>
-    </div>
-
-    <div class="field">
-      <label for="mistral_key">Mistral API Key</label>
-      <div class="key-row">
-        <input type="password" id="mistral_key" placeholder="..." autocomplete="off">
-        <button type="button" id="toggleMistral">Show</button>
-        <button type="button" class="validate-btn" id="validateMistral">Validate</button>
-      </div>
-      <div class="key-status" id="mistralKeyStatus"></div>
-      <div class="hint">Required for Mistral OCR</div>
-    </div>
-
-    <div class="field">
-      <label for="datalab_key">Datalab API Key</label>
-      <div class="key-row">
-        <input type="password" id="datalab_key" placeholder="..." autocomplete="off">
-        <button type="button" id="toggleDatalab">Show</button>
-        <button type="button" class="validate-btn" id="validateDatalab">Validate</button>
-      </div>
-      <div class="key-status" id="datalabKeyStatus"></div>
-      <div class="hint">Required for Marker and Chandra — get a key at <a href="https://www.datalab.to/app/keys" target="_blank" style="color:var(--accent);">datalab.to</a></div>
-    </div>
+    <div id="keyEntries"></div>
+    <button class="btn-add-key" id="addKeyBtn">+ Add key</button>
   </div>
 
   <button class="save-btn" id="saveBtn">Save settings</button>
@@ -241,7 +179,6 @@ import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvid
 // --- Firebase Auth ---
 const cfgResp = await fetch('/firebase-config');
 const firebaseConfig = await cfgResp.json();
-
 let _currentUser = null;
 
 if (firebaseConfig.authDisabled) {
@@ -251,20 +188,17 @@ if (firebaseConfig.authDisabled) {
   const firebaseApp = initializeApp(firebaseConfig);
   const auth = getAuth(firebaseApp);
   const provider = new GoogleAuthProvider();
-
   document.getElementById('overlaySignIn').addEventListener('click', () => signInWithPopup(auth, provider));
   document.getElementById('signOutBtn').addEventListener('click', () => signOut(auth));
-
   onAuthStateChanged(auth, user => {
-    const overlay = document.getElementById('authOverlay');
     _currentUser = user;
     if (user) {
-      overlay.style.display = 'none';
+      document.getElementById('authOverlay').style.display = 'none';
       document.getElementById('userEmail').textContent = user.email;
       document.getElementById('signOutArea').style.display = 'block';
       loadSettings();
     } else {
-      overlay.style.display = 'flex';
+      document.getElementById('authOverlay').style.display = 'flex';
       document.getElementById('signOutArea').style.display = 'none';
     }
   });
@@ -278,89 +212,136 @@ async function authFetch(url, opts = {}) {
   return fetch(url, opts);
 }
 
-// --- Settings logic ---
-const modelSelect = document.getElementById('model');
-const openaiInput = document.getElementById('openai_key');
-const anthropicInput = document.getElementById('anthropic_key');
-const mistralInput = document.getElementById('mistral_key');
-const datalabInput = document.getElementById('datalab_key');
+// --- Key service definitions ---
+const KEY_SERVICES = [
+  { id: 'openai',    label: 'OpenAI',    settingsKey: 'openai_api_key',    placeholder: 'sk-...' },
+  { id: 'anthropic', label: 'Anthropic',  settingsKey: 'anthropic_api_key', placeholder: 'sk-ant-...' },
+  { id: 'mistral',   label: 'Mistral',    settingsKey: 'mistral_api_key',   placeholder: '...' },
+  { id: 'datalab',   label: 'Datalab',    settingsKey: 'datalab_api_key',   placeholder: '...' },
+];
+
+// --- Dynamic key entries ---
+let keyEntries = []; // { serviceId, value, masked }
+
+function getUsedServices() {
+  return new Set(keyEntries.map(k => k.serviceId));
+}
+
+function renderKeys() {
+  const container = document.getElementById('keyEntries');
+  container.innerHTML = '';
+  const used = getUsedServices();
+
+  keyEntries.forEach((entry, idx) => {
+    const div = document.createElement('div');
+    div.className = 'key-entry';
+
+    const top = document.createElement('div');
+    top.className = 'key-top';
+
+    // Service dropdown
+    const sel = document.createElement('select');
+    for (const svc of KEY_SERVICES) {
+      if (svc.id !== entry.serviceId && used.has(svc.id)) continue;
+      const opt = document.createElement('option');
+      opt.value = svc.id;
+      opt.textContent = svc.label;
+      if (svc.id === entry.serviceId) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    sel.addEventListener('change', () => {
+      entry.serviceId = sel.value;
+      const svc = KEY_SERVICES.find(s => s.id === sel.value);
+      inp.placeholder = svc ? svc.placeholder : '...';
+      inp.value = '';
+      entry.value = '';
+      entry.masked = false;
+      renderKeys();
+    });
+
+    // Key input
+    const svc = KEY_SERVICES.find(s => s.id === entry.serviceId);
+    const inp = document.createElement('input');
+    inp.type = 'password';
+    inp.placeholder = svc ? svc.placeholder : '...';
+    inp.value = entry.value || '';
+    inp.autocomplete = 'off';
+    inp.addEventListener('change', () => {
+      entry.value = inp.value;
+      entry.masked = false;
+      autoSave();
+    });
+
+    // Show/Hide
+    const toggleBtn = document.createElement('button');
+    toggleBtn.textContent = 'Show';
+    toggleBtn.addEventListener('click', () => {
+      if (inp.type === 'password') { inp.type = 'text'; toggleBtn.textContent = 'Hide'; }
+      else { inp.type = 'password'; toggleBtn.textContent = 'Show'; }
+    });
+
+    // Validate
+    const valBtn = document.createElement('button');
+    valBtn.className = 'validate-btn';
+    valBtn.textContent = 'Validate';
+    valBtn.addEventListener('click', () => validateKey(entry, statusDiv));
+
+    // Remove
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-key';
+    removeBtn.innerHTML = '&times;';
+    removeBtn.title = 'Remove this key';
+    removeBtn.addEventListener('click', () => {
+      keyEntries.splice(idx, 1);
+      renderKeys();
+      autoSave();
+    });
+
+    top.appendChild(sel);
+    top.appendChild(inp);
+    top.appendChild(toggleBtn);
+    top.appendChild(valBtn);
+    top.appendChild(removeBtn);
+
+    const statusDiv = document.createElement('div');
+    statusDiv.className = 'key-status';
+
+    div.appendChild(top);
+    div.appendChild(statusDiv);
+    container.appendChild(div);
+  });
+
+  // Show/hide add button based on remaining services
+  document.getElementById('addKeyBtn').style.display =
+    used.size >= KEY_SERVICES.length ? 'none' : '';
+}
+
+document.getElementById('addKeyBtn').addEventListener('click', () => {
+  const used = getUsedServices();
+  const next = KEY_SERVICES.find(s => !used.has(s.id));
+  if (!next) return;
+  keyEntries.push({ serviceId: next.id, value: '', masked: false });
+  renderKeys();
+});
+
+// --- Auto-save ---
+let _saveTimer = null;
 const statusEl = document.getElementById('status');
 
-function toggleVis(id, btn) {
-  const inp = document.getElementById(id);
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'Hide'; }
-  else { inp.type = 'password'; btn.textContent = 'Show'; }
+function autoSave() {
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(doSave, 600);
 }
 
-document.getElementById('toggleOpenai').addEventListener('click', function() {
-  toggleVis('openai_key', this);
-});
-document.getElementById('toggleAnthropic').addEventListener('click', function() {
-  toggleVis('anthropic_key', this);
-});
-document.getElementById('toggleDatalab').addEventListener('click', function() {
-  toggleVis('datalab_key', this);
-});
-document.getElementById('toggleMistral').addEventListener('click', function() {
-  toggleVis('mistral_key', this);
-});
-
-async function loadSettings() {
-  try {
-    const resp = await authFetch('/settings');
-    if (!resp.ok) {
-      statusEl.textContent = 'Failed to load settings (status ' + resp.status + ')';
-      statusEl.className = 'status err';
-      return;
+async function doSave() {
+  const body = {};
+  for (const entry of keyEntries) {
+    const svc = KEY_SERVICES.find(s => s.id === entry.serviceId);
+    if (!svc) continue;
+    if (entry.value && !entry.value.includes('...') && !entry.masked) {
+      body[svc.settingsKey] = entry.value;
     }
-    const data = await resp.json();
-
-    modelSelect.innerHTML = '';
-    for (const m of (data.models || [])) {
-      const opt = document.createElement('option');
-      opt.value = m.id;
-      opt.textContent = m.name + ' (' + m.provider + ')';
-      modelSelect.appendChild(opt);
-    }
-    modelSelect.value = data.model;
-
-    openaiInput.value = data.openai_api_key || '';
-    openaiInput.placeholder = data.openai_api_key ? data.openai_api_key : 'sk-...';
-
-    anthropicInput.value = data.anthropic_api_key || '';
-    anthropicInput.placeholder = data.anthropic_api_key ? data.anthropic_api_key : 'sk-ant-...';
-
-    mistralInput.value = data.mistral_api_key || '';
-    mistralInput.placeholder = data.mistral_api_key ? data.mistral_api_key : '...';
-
-    datalabInput.value = data.datalab_api_key || '';
-    datalabInput.placeholder = data.datalab_api_key ? data.datalab_api_key : '...';
-
-  } catch (e) {
-    statusEl.textContent = 'Error loading settings: ' + e.message;
-    statusEl.className = 'status err';
   }
-}
-
-document.getElementById('saveBtn').addEventListener('click', async () => {
-  const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-  statusEl.textContent = '';
-
-  const body = { model: modelSelect.value };
-  if (openaiInput.value && !openaiInput.value.includes('...')) {
-    body.openai_api_key = openaiInput.value;
-  }
-  if (anthropicInput.value && !anthropicInput.value.includes('...')) {
-    body.anthropic_api_key = anthropicInput.value;
-  }
-  if (mistralInput.value && !mistralInput.value.includes('...')) {
-    body.mistral_api_key = mistralInput.value;
-  }
-  if (datalabInput.value && !datalabInput.value.includes('...')) {
-    body.datalab_api_key = datalabInput.value;
-  }
-
   try {
     const resp = await authFetch('/settings', {
       method: 'POST',
@@ -369,63 +350,76 @@ document.getElementById('saveBtn').addEventListener('click', async () => {
     });
     if (!resp.ok) throw new Error('Save failed');
     const data = await resp.json();
-    openaiInput.value = data.openai_api_key || '';
-    anthropicInput.value = data.anthropic_api_key || '';
-    mistralInput.value = data.mistral_api_key || '';
-    datalabInput.value = data.datalab_api_key || '';
+    // Update masked values
+    for (const entry of keyEntries) {
+      const svc = KEY_SERVICES.find(s => s.id === entry.serviceId);
+      if (svc && data[svc.settingsKey]) {
+        entry.value = data[svc.settingsKey];
+        entry.masked = true;
+      }
+    }
+    renderKeys();
     statusEl.className = 'status ok';
-    statusEl.textContent = 'Settings saved.';
+    statusEl.textContent = 'Saved';
+    setTimeout(() => { statusEl.textContent = ''; }, 2000);
   } catch (e) {
     statusEl.className = 'status err';
     statusEl.textContent = 'Error: ' + e.message;
-  } finally {
-    btn.disabled = false;
   }
-});
+}
+
+document.getElementById('saveBtn').addEventListener('click', () => doSave());
 
 // --- Key validation ---
-async function validateKey(providerName, inputEl, statusElId) {
-  const key = inputEl.value;
-  const el = document.getElementById(statusElId);
+async function validateKey(entry, statusDiv) {
+  const key = entry.value;
   if (!key || key.includes('...')) {
-    el.textContent = 'Enter a full key to validate.';
-    el.className = 'key-status invalid';
+    statusDiv.textContent = 'Enter a full key to validate.';
+    statusDiv.className = 'key-status invalid';
     return;
   }
-  el.textContent = 'Validating...';
-  el.className = 'key-status';
+  statusDiv.textContent = 'Validating...';
+  statusDiv.className = 'key-status';
   try {
     const resp = await authFetch('/validate-key', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider: providerName, key }),
+      body: JSON.stringify({ provider: entry.serviceId, key }),
     });
     const data = await resp.json();
-    if (data.valid) {
-      el.textContent = data.message;
-      el.className = 'key-status valid';
-    } else {
-      el.textContent = data.message || 'Invalid key';
-      el.className = 'key-status invalid';
-    }
+    statusDiv.textContent = data.message || (data.valid ? 'Valid' : 'Invalid key');
+    statusDiv.className = 'key-status ' + (data.valid ? 'valid' : 'invalid');
   } catch (e) {
-    el.textContent = 'Validation error: ' + e.message;
-    el.className = 'key-status invalid';
+    statusDiv.textContent = 'Validation error: ' + e.message;
+    statusDiv.className = 'key-status invalid';
   }
 }
 
-document.getElementById('validateOpenai').addEventListener('click', () => {
-  validateKey('openai', openaiInput, 'openaiKeyStatus');
-});
-document.getElementById('validateAnthropic').addEventListener('click', () => {
-  validateKey('anthropic', anthropicInput, 'anthropicKeyStatus');
-});
-document.getElementById('validateMistral').addEventListener('click', () => {
-  validateKey('mistral', mistralInput, 'mistralKeyStatus');
-});
-document.getElementById('validateDatalab').addEventListener('click', () => {
-  validateKey('datalab', datalabInput, 'datalabKeyStatus');
-});
+// --- Load settings ---
+async function loadSettings() {
+  try {
+    const resp = await authFetch('/settings');
+    if (!resp.ok) {
+      statusEl.textContent = 'Failed to load settings';
+      statusEl.className = 'status err';
+      return;
+    }
+    const data = await resp.json();
+
+    // Populate existing keys
+    keyEntries = [];
+    for (const svc of KEY_SERVICES) {
+      const val = data[svc.settingsKey];
+      if (val && val.length > 0) {
+        keyEntries.push({ serviceId: svc.id, value: val, masked: true });
+      }
+    }
+    renderKeys();
+  } catch (e) {
+    statusEl.textContent = 'Error loading settings: ' + e.message;
+    statusEl.className = 'status err';
+  }
+}
 </script>
 </body>
 </html>

@@ -70,8 +70,15 @@ async def extract_text(
 
     if ocr_fallback and len(text.strip()) < 200:
         info.append("No usable text layer detected, using OCR")
-        from server.par_extract import _ocr_pdf
-        text = _ocr_pdf(pdf_path, force=True)
+        try:
+            from server.par_extract import _ocr_pdf
+            ocr_text = _ocr_pdf(pdf_path, force=True)
+            if ocr_text and len(ocr_text.strip()) > len(text.strip()):
+                text = ocr_text
+            else:
+                info.append("OCR did not produce usable text")
+        except Exception as e:
+            info.append(f"OCR failed: {e}")
 
     return text, info
 

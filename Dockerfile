@@ -2,15 +2,16 @@ FROM us-east1-docker.pkg.dev/petey-dev/petey/base:latest
 
 WORKDIR /app
 
+ARG PETEY_BUST_CACHE=0
+RUN pip install --no-cache-dir git+https://github.com/afriedman412/petey.git
+
 COPY pyproject.toml .
 COPY server/ server/
 COPY templates/ templates/
 COPY static/ static/
 COPY schemas/ schemas/
 
-RUN pip install --no-cache-dir git+https://github.com/afriedman412/petey.git && \
-    pip install --no-cache-dir "marker-pdf>=1.0.0" && \
-    pip install --no-cache-dir .
+RUN pip install --no-cache-dir .
 
 # Firebase config is passed via env vars at deploy time:
 #   FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID

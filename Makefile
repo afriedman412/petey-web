@@ -4,6 +4,7 @@ PIP = $(VENV)/bin/pip
 PARSER_URL ?= https://petey-parser-425941924538.us-east1.run.app
 
 BASE_IMAGE = us-east1-docker.pkg.dev/petey-dev/petey/base:latest
+WEB_IMAGE = us-east1-docker.pkg.dev/petey-dev/petey/web:latest
 
 .PHONY: venv install run deploy deploy-web deploy-parser build-base clean
 
@@ -59,7 +60,9 @@ FIREBASE_PROJECT_ID ?= petey-dev
 
 deploy-web:
 	gcloud config set project petey-dev
-	gcloud run deploy petey --source . --region=us-east1 --allow-unauthenticated --memory=4Gi --cpu=4 --timeout=3600 \
+	docker buildx build --platform linux/amd64 -t $(WEB_IMAGE) --push \
+		$(if $(PETEY),--build-arg PETEY_BUST_CACHE=$$(date +%s),) .
+	gcloud run deploy petey --image=$(WEB_IMAGE) --region=us-east1 --allow-unauthenticated --memory=4Gi --cpu=4 --timeout=3600 \
 		--set-env-vars=PARSER_URL=$(PARSER_URL),FIREBASE_API_KEY=$(FIREBASE_API_KEY),FIREBASE_AUTH_DOMAIN=$(FIREBASE_AUTH_DOMAIN),FIREBASE_PROJECT_ID=$(FIREBASE_PROJECT_ID)
 
 deploy-parser:

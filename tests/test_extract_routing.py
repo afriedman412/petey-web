@@ -16,6 +16,7 @@ os.environ["FIREBASE_AUTH_DISABLED"] = "1"
 from server.extract import (  # noqa: E402
     async_extract,
     async_extract_pages,
+    extract_text,
     _remote_parse_fn,
     _remote_page_parse_fn,
     _set_ocr_env,
@@ -267,3 +268,98 @@ class TestSetOcrEnv:
         ):
             _set_ocr_env("test")
         assert "DATALAB_API_KEY" not in os.environ
+
+
+# -------------------------------------------------------------------
+# extract_text — OCR fallback
+# -------------------------------------------------------------------
+
+class TestExtractTextOcrFallback:
+    @pytest.mark.asyncio
+    async def test_ocr_fallback_on_short_text(self):
+        """When parser returns < 200 chars, OCR should kick in."""
+        with (
+            patch(
+                "server.extract._remote_parse_fn",
+                new_callable=AsyncMock,
+                return_value="short",
+            ),
+            patch(
+                "server.par_extract._ocr_pdf",
+                return_value="OCR extracted a full page of useful text " * 10,
+            ) as mock_ocr,
+        ):
+            text, info = await extract_text("/fake.pdf", ocr_fallback=True)
+
+        assert "No usable text layer detected" in info[0]
+        assert "OCR extracted" in text
+        mock_ocr.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_ocr_fallback_keeps_original_when_ocr_empty(self):
+        """If OCR returns empty, keep the original text."""
+        with (
+            patch(
+                "server.extract._remote_parse_fn",
+                new_callable=AsyncMock,
+                return_value="short",
+            ),
+            patch(
+                "server.par_extract._ocr_pdf",
+                return_value="",
+            ),
+        ):
+            text, info = await extract_text("/fake.pdf", ocr_fallback=True)
+
+        assert text == "short"
+        assert any("OCR did not produce usable text" in m for m in info)
+
+    @pytest.mark.asyncio
+    async def test_ocr_fallback_handles_exception(self):
+        """If OCR crashes, keep original text and report error."""
+        with (
+            patch(
+                "server.extract._remote_parse_fn",
+                new_callable=AsyncMock,
+                return_value="short",
+            ),
+            patch(
+                "server.par_extract._ocr_pdf",
+                side_effect=RuntimeError("ghostscript missing"),
+            ),
+        ):
+            text, info = await extract_text("/fake.pdf", ocr_fallback=True)
+
+        assert text == "short"
+        assert any("OCR failed" in m for m in info)
+
+    @pytest.mark.asyncio
+    async def test_no_ocr_when_text_sufficient(self):
+        """No OCR fallback when text is >= 200 chars."""
+        long_text = "x" * 200
+        with (
+            patch(
+                "server.extract._remote_parse_fn",
+                new_callable=AsyncMock,
+                return_value=long_text,
+            ),
+        ):
+            text, info = await extract_text("/fake.pdf", ocr_fallback=True)
+
+        assert text == long_text
+        assert info == []
+
+    @pytest.mark.asyncio
+    async def test_no_ocr_when_fallback_disabled(self):
+        """No OCR when ocr_fallback=False even with short text."""
+        with (
+            patch(
+                "server.extract._remote_parse_fn",
+                new_callable=AsyncMock,
+                return_value="short",
+            ),
+        ):
+            text, info = await extract_text("/fake.pdf", ocr_fallback=False)
+
+        assert text == "short"
+        assert info == []

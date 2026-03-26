@@ -345,36 +345,11 @@ table.results tr:hover td { background: var(--surface-2); }
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 1: Fields -->
+  <!-- STEP 1: Configure Extraction (was Parser + Config) -->
   <!-- ============================================================ -->
   <div class="wizard-step" id="step-1">
-    <div class="step-title">Define your fields</div>
-    <div class="step-subtitle" id="fieldsSubtitle">What information do you want to extract? Add a field for each piece of data.</div>
-
-    <div id="headerFieldsSection" style="display:none;">
-      <div class="field-group-label">Cover page fields</div>
-      <div class="step-subtitle" style="margin-bottom:0.75rem; margin-top:0;">These fields come from the first page and will be repeated on every row.</div>
-      <div id="headerFieldRows"></div>
-      <button class="btn-add" id="addHeaderField" style="margin-bottom:1.5rem;">+ Add cover page field</button>
-      <div class="field-group-label">Table fields</div>
-      <div class="step-subtitle" style="margin-bottom:0.75rem; margin-top:0;">These are the columns in the table you want to extract.</div>
-    </div>
-
-    <div id="tableFieldRows"></div>
-    <button class="btn-add" id="addTableField">+ Add field</button>
-
-    <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(0)">Back</button>
-      <button class="btn-next" id="fieldsNext">Next</button>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- STEP 2: Parser -->
-  <!-- ============================================================ -->
-  <div class="wizard-step" id="step-2">
-    <div class="step-title">Choose a parser</div>
-    <div class="step-subtitle">How should Petey read your PDFs? Pick the method that fits your documents.</div>
+    <div class="step-title">Configure extraction</div>
+    <div class="step-subtitle">How should Petey read your PDFs? Pick a parser and fine-tune settings.</div>
     <div class="parser-grid">
       <div class="parser-card" data-parser="pymupdf">
         <div class="parser-name">PyMuPDF</div>
@@ -393,19 +368,7 @@ table.results tr:hover td { background: var(--surface-2); }
         <div class="parser-desc">AI-powered OCR for scanned documents, handwriting, or complex layouts. Requires a Datalab API key.</div>
       </div>
     </div>
-    <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(1)">Back</button>
-      <button class="btn-next" id="parserNext">Next</button>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- STEP 3: Configuration -->
-  <!-- ============================================================ -->
-  <div class="wizard-step" id="step-3">
-    <div class="step-title">Configure extraction</div>
-    <div class="step-subtitle">Fine-tune how Petey processes your documents. Defaults are pre-filled based on your use case.</div>
-    <div class="config-form">
+    <div class="config-form" style="margin-top:1.5rem;">
       <div class="config-group" id="headerPagesGroup">
         <label>Header pages</label>
         <input type="number" id="cfgHeaderPages" value="0" min="0" max="10" style="width:5rem;">
@@ -416,36 +379,64 @@ table.results tr:hover td { background: var(--surface-2); }
         <input type="text" id="cfgPageRange" placeholder="e.g. 2-5 or 1,3,5-7" style="width:14rem;">
         <div class="config-hint">Only process specific pages. Leave blank to process all pages.</div>
       </div>
+    </div>
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goToStep(0)">Back</button>
+      <button class="btn-next" id="parserNext">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 2: Fields (+ instructions) -->
+  <!-- ============================================================ -->
+  <div class="wizard-step" id="step-2">
+    <div class="step-title">Define your fields</div>
+    <div class="step-subtitle" id="fieldsSubtitle">What information do you want to extract? Add a field for each piece of data. Put anything you think would be useful to know in the Description field.</div>
+
+    <div id="headerFieldsSection" style="display:none;">
+      <div class="field-group-label">Cover page fields</div>
+      <div class="step-subtitle" style="margin-bottom:0.75rem; margin-top:0;">These fields come from the first page and will be repeated on every row.</div>
+      <div id="headerFieldRows"></div>
+      <button class="btn-add" id="addHeaderField" style="margin-bottom:1.5rem;">+ Add cover page field</button>
+      <div class="field-group-label">Table fields</div>
+      <div class="step-subtitle" style="margin-bottom:0.75rem; margin-top:0;">These are the columns in the table you want to extract.</div>
+    </div>
+
+    <div id="tableFieldRows"></div>
+    <button class="btn-add" id="addTableField">+ Add field</button>
+
+    <div class="config-form" style="margin-top:1.5rem;">
       <div class="config-group">
         <label>Additional instructions <span style="color:var(--text-dim); font-weight:400;">(optional)</span></label>
         <textarea id="cfgInstructions" placeholder="e.g. Dates should be in MM/DD/YYYY format. Ignore footnotes."></textarea>
         <div class="config-hint">Extra guidance for the extraction model. Be specific about formatting, edge cases, or what to ignore.</div>
       </div>
     </div>
+
     <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(2)">Back</button>
-      <button class="btn-next" onclick="goToStep(4)">Next</button>
+      <button class="btn-back" onclick="goToStep(1)">Back</button>
+      <button class="btn-next" id="fieldsNext">Next</button>
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 4: Upload -->
+  <!-- STEP 3: Upload -->
   <!-- ============================================================ -->
-  <div class="wizard-step" id="step-4">
+  <div class="wizard-step" id="step-3">
     <div class="step-title">Upload your files</div>
-    <div class="step-subtitle" id="uploadSubtitle">Drop your PDFs here to get started.</div>
+    <div class="step-subtitle" id="uploadSubtitle">Drop your PDFs here. You can select a single file, multiple files or a whole folder.</div>
     <script src="/static/dropzone.js"></script>
     <drop-zone id="dropzone"></drop-zone>
     <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(3)">Back</button>
+      <button class="btn-back" onclick="goToStep(2)">Back</button>
       <button class="btn-next" id="uploadNext" disabled>Next</button>
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 5: Review -->
+  <!-- STEP 4: Review -->
   <!-- ============================================================ -->
-  <div class="wizard-step" id="step-5">
+  <div class="wizard-step" id="step-4">
     <div class="step-title">Review & download schema</div>
     <div class="step-subtitle">Here's what Petey will extract. Download the schema to reuse it later on the main Extractor page.</div>
 
@@ -463,15 +454,15 @@ table.results tr:hover td { background: var(--surface-2); }
     </div>
 
     <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(4)">Back</button>
+      <button class="btn-back" onclick="goToStep(3)">Back</button>
       <button class="btn-next" id="extractBtn">Extract</button>
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 6: Results -->
+  <!-- STEP 5: Results -->
   <!-- ============================================================ -->
-  <div class="wizard-step" id="step-6">
+  <div class="wizard-step" id="step-5">
     <div class="step-title">Results</div>
     <div class="step-subtitle" id="resultsSubtitle">Extraction in progress...</div>
 
@@ -489,6 +480,10 @@ table.results tr:hover td { background: var(--surface-2); }
 
     <div id="status"></div>
     <div id="results"></div>
+
+    <div id="resultsSchemaDownload" style="display:none; gap:0.75rem; margin-top:1rem;">
+      <button class="btn-add" id="downloadSchemaBtnResults" style="padding:0.45rem 1rem;">Download Schema (.yaml)</button>
+    </div>
 
     <div class="wizard-nav" id="resultsNav" style="display:none;">
       <button class="btn-back" onclick="startOver()">Start over</button>
@@ -531,7 +526,7 @@ async function authFetch(url, opts = {}) {
 }
 
 // --- Wizard state ---
-const STEPS = ['Use case', 'Fields', 'Parser', 'Config', 'Upload', 'Review', 'Results'];
+const STEPS = ['Use case', 'Config', 'Fields', 'Upload', 'Review', 'Results'];
 let currentStep = 0;
 
 const W = {
@@ -618,8 +613,11 @@ document.querySelectorAll('.case-card').forEach(card => {
       if (!W.headerFields.length) W.headerFields = [{ name: '', type: 'string', description: '', values: '' }];
     } else {
       document.getElementById('headerFieldsSection').style.display = 'none';
-      document.getElementById('fieldsSubtitle').textContent = 'What information do you want to extract? Add a field for each piece of data.';
+      document.getElementById('fieldsSubtitle').textContent = 'What information do you want to extract? Add a field for each piece of data. Put anything you think would be useful to know in the Description field.';
     }
+
+    // Show header pages only for table modes
+    document.getElementById('headerPagesGroup').style.display = W.mode === 'table' ? '' : 'none';
     if (!W.tableFields.length) W.tableFields = [{ name: '', type: 'string', description: '', values: '' }];
 
     // Set up upload hints
@@ -627,7 +625,7 @@ document.querySelectorAll('.case-card').forEach(card => {
       document.getElementById('uploadSubtitle').textContent = 'Drop your PDF here.';
       document.getElementById('dropzone').setAttribute('max-files', '1');
     } else {
-      document.getElementById('uploadSubtitle').textContent = 'Drop your PDFs here. You can select multiple files or a whole folder.';
+      document.getElementById('uploadSubtitle').textContent = 'Drop your PDFs here. You can select a single file, multiple files or a whole folder.';
       document.getElementById('dropzone').setAttribute('max-files', '5000');
     }
 
@@ -645,7 +643,7 @@ document.querySelectorAll('.case-card').forEach(card => {
   });
 });
 
-// --- Step 1: Field builder ---
+// --- Step 2: Field builder ---
 function esc(s) { return (s||'').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
 let _dragIdx = null;
@@ -668,7 +666,7 @@ function renderFieldRows(container, fieldsArr, group) {
         '<option value="date"' + (f.type==='date'?' selected':'') + '>Date</option>' +
         '<option value="enum"' + (f.type==='enum'?' selected':'') + '>Category</option>' +
       '</select>' +
-      '<textarea placeholder="Description" rows="1" data-i="' + i + '" data-key="description" data-group="' + group + '">' + esc(f.description) + '</textarea>' +
+      '<textarea placeholder="Description (optional)" rows="1" data-i="' + i + '" data-key="description" data-group="' + group + '">' + esc(f.description) + '</textarea>' +
       '<button class="remove-btn" data-i="' + i + '" data-group="' + group + '">&times;</button>';
 
     row.addEventListener('dragstart', e => {
@@ -769,10 +767,10 @@ document.getElementById('addHeaderField').addEventListener('click', () => {
 });
 
 document.getElementById('fieldsNext').addEventListener('click', () => {
-  if (!document.getElementById('fieldsNext').disabled) goToStep(2);
+  if (!document.getElementById('fieldsNext').disabled) goToStep(3);
 });
 
-// --- Step 2: Parser ---
+// --- Step 1: Parser ---
 function updateParserBadges() {
   const rec = CASE_DEFAULTS[W.useCase]?.parser;
   document.querySelectorAll('.parser-card').forEach(card => {
@@ -796,10 +794,10 @@ document.querySelectorAll('.parser-card').forEach(card => {
 });
 
 document.getElementById('parserNext').addEventListener('click', () => {
-  goToStep(3);
+  goToStep(2);
 });
 
-// --- Step 4: Upload ---
+// --- Step 3: Upload ---
 document.getElementById('dropzone').addEventListener('files-selected', e => {
   W.files = e.detail.files;
   document.getElementById('uploadNext').disabled = !W.files.length;
@@ -811,11 +809,11 @@ document.getElementById('uploadNext').addEventListener('click', () => {
     W.pageRange = document.getElementById('cfgPageRange').value.trim();
     W.instructions = document.getElementById('cfgInstructions').value.trim();
     buildReviewStep();
-    goToStep(5);
+    goToStep(4);
   }
 });
 
-// --- Step 5: Review ---
+// --- Step 4: Review ---
 function buildSpec() {
   const spec = {};
   const name = W.schemaName || 'guide_schema';
@@ -889,14 +887,16 @@ document.getElementById('schemaName').addEventListener('input', () => {
   document.getElementById('schemaPreview').textContent = specToYaml(spec);
 });
 
-document.getElementById('downloadSchemaBtn').addEventListener('click', () => {
+function downloadSchema() {
   const spec = buildSpec();
   const yaml = specToYaml(spec);
   const filename = (spec.name || 'schema').toLowerCase().replace(/\s+/g, '_') + '.yaml';
   triggerDownload(new Blob([yaml], { type: 'text/yaml' }), filename);
-});
+}
+document.getElementById('downloadSchemaBtn').addEventListener('click', downloadSchema);
+document.getElementById('downloadSchemaBtnResults').addEventListener('click', downloadSchema);
 
-// --- Step 6: Extraction ---
+// --- Step 5: Extraction ---
 class ApiKeyError extends Error {
   constructor(msg) { super(msg); this.name = 'ApiKeyError'; }
 }
@@ -965,7 +965,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   const spec = buildSpec();
   if (!Object.keys(spec.fields).length) return;
 
-  goToStep(6);
+  goToStep(5);
 
   const st = document.getElementById('status');
   const resultsEl = document.getElementById('results');
@@ -1101,6 +1101,7 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   }
 
   document.getElementById('resultsNav').style.display = '';
+  document.getElementById('resultsSchemaDownload').style.display = 'flex';
 });
 
 // --- Result rendering ---

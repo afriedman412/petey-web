@@ -146,8 +146,10 @@ class TestTextModeExtract:
         mock_result.text = "Cleaned up text here"
 
         with (
-            patch("server.app.async_extract", new_callable=AsyncMock, return_value=mock_result),
-            patch("server.app.extract_text", new_callable=AsyncMock, return_value=("Raw text", [])),
+            patch("server.app.async_extract",
+                  new_callable=AsyncMock, return_value=mock_result),
+            patch("server.app.extract_text", new_callable=AsyncMock,
+                  return_value=("Raw text", [])),
             patch("server.app.get_settings", return_value={
                 "model": "gpt-4.1-mini",
                 "openai_api_key": "sk-test",

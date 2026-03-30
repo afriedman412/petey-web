@@ -359,13 +359,9 @@ table.results tr:hover td { background: var(--surface-2); }
         <div class="parser-name">pdfplumber</div>
         <div class="parser-desc">Better at preserving layout and whitespace. Good for structured documents with columns.</div>
       </div>
-      <div class="parser-card" data-parser="tables">
-        <div class="parser-name">Tables</div>
-        <div class="parser-desc">Specialized for tabular data. Detects table boundaries and extracts rows/columns directly.</div>
-      </div>
-      <div class="parser-card" data-parser="marker">
-        <div class="parser-name">Marker (Datalab)</div>
-        <div class="parser-desc">AI-powered OCR for scanned documents, handwriting, or complex layouts. Requires a Datalab API key.</div>
+      <div class="parser-card" data-parser="datalab">
+        <div class="parser-name">Datalab</div>
+        <div class="parser-desc">AI-powered parsing for scanned documents, handwriting, or complex layouts. Requires a Datalab API key.</div>
       </div>
     </div>
     <div class="config-form" style="margin-top:1.5rem;">
@@ -546,9 +542,9 @@ const W = {
 // Use case defaults
 const CASE_DEFAULTS = {
   1: { mode: 'query',  singleDoc: false, parser: 'pymupdf',  headerPages: 0 },
-  2: { mode: 'table',  singleDoc: false, parser: 'tables',   headerPages: 0 },
-  3: { mode: 'table',  singleDoc: false, parser: 'tables',   headerPages: 1 },
-  4: { mode: 'table',  singleDoc: true,  parser: 'tables',   headerPages: 0 },
+  2: { mode: 'table',  singleDoc: false, parser: 'pymupdf',  headerPages: 0 },
+  3: { mode: 'table',  singleDoc: false, parser: 'pymupdf',  headerPages: 1 },
+  4: { mode: 'table',  singleDoc: true,  parser: 'pymupdf',  headerPages: 0 },
   5: { mode: 'table',  singleDoc: true,  parser: 'pymupdf',  headerPages: 0 },
 };
 

@@ -10,7 +10,6 @@ from unittest.mock import AsyncMock, patch, MagicMock
 from server.validate_keys import (
     validate_openai_key,
     validate_anthropic_key,
-    validate_mistral_key,
     validate_datalab_key,
 )
 
@@ -182,34 +181,4 @@ class TestValidateAnthropicKey:
             mock_client.__aexit__ = AsyncMock(return_value=False)
             mock_cls.return_value = mock_client
             valid, msg = await validate_anthropic_key("bad-key")
-        assert valid is False
-
-
-# ---------------------------------------------------------------------------
-# Mistral key validation
-# ---------------------------------------------------------------------------
-
-class TestValidateMistralKey:
-    @pytest.mark.asyncio
-    async def test_valid_key(self):
-        mock_resp = MagicMock(status_code=200)
-        with patch("server.validate_keys.httpx.AsyncClient") as mock_cls:
-            mock_client = AsyncMock()
-            mock_client.get.return_value = mock_resp
-            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-            mock_client.__aexit__ = AsyncMock(return_value=False)
-            mock_cls.return_value = mock_client
-            valid, msg = await validate_mistral_key("ms-test")
-        assert valid is True
-
-    @pytest.mark.asyncio
-    async def test_invalid_key(self):
-        mock_resp = MagicMock(status_code=401)
-        with patch("server.validate_keys.httpx.AsyncClient") as mock_cls:
-            mock_client = AsyncMock()
-            mock_client.get.return_value = mock_resp
-            mock_client.__aenter__ = AsyncMock(return_value=mock_client)
-            mock_client.__aexit__ = AsyncMock(return_value=False)
-            mock_cls.return_value = mock_client
-            valid, msg = await validate_mistral_key("bad-key")
         assert valid is False

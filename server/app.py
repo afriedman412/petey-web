@@ -25,7 +25,7 @@ from server.settings import (
     get_settings, update_settings, mask_key, get_provider, MODELS,
 )
 from server.validate_keys import (
-    validate_openai_key, validate_anthropic_key, validate_mistral_key,
+    validate_openai_key, validate_anthropic_key,
     validate_datalab_key,
 )
 from server.runs import (
@@ -140,8 +140,6 @@ async def extract_endpoint(
     schema_spec: str = Form(None),
     instructions: str = Form(""),
     parser: str = Form("pymupdf"),
-    ocr_fallback: bool = Form(False),
-    ocr_backend: str = Form("none"),
     model: str = Form(None),
     mode: str = Form("query"),
     uid: str = Depends(get_uid),
@@ -219,7 +217,7 @@ async def extract_endpoint(
             records = await async_extract_pages(
                 tmp_path, response_model,
                 uid=uid, instructions=instructions,
-                parser=spec.get("parser", "tables"),
+                parser=spec.get("parser", "pymupdf"),
                 header_pages=spec.get("header_pages", 0),
                 page_range=spec.get("pages") or None,
             )
@@ -239,8 +237,7 @@ async def extract_endpoint(
             result = await async_extract(
                 tmp_path, response_model,
                 uid=uid, instructions=instructions,
-                parser=parser, ocr_fallback=ocr_fallback,
-                ocr_backend=ocr_backend,
+                parser=parser,
                 text=text if info else None,
             )
             data = result.model_dump(by_alias=True)
@@ -266,7 +263,6 @@ async def extract_stream_endpoint(
     schema_spec: str = Form(None),
     instructions: str = Form(""),
     parser: str = Form("pymupdf"),
-    ocr_backend: str = Form("none"),
     model: str = Form(None),
     uid: str = Depends(get_uid),
 ):
@@ -323,7 +319,7 @@ async def extract_stream_endpoint(
                 records = await async_extract_pages(
                     tmp_path, response_model,
                     uid=uid, instructions=instructions,
-                    parser=spec.get("parser", "tables"),
+                    parser=spec.get("parser", "pymupdf"),
                     header_pages=spec.get("header_pages", 0),
                     page_range=spec.get("pages") or None,
                     on_result=on_result,
@@ -504,7 +500,8 @@ async def results_append(request: Request):
 async def infer_schema_endpoint(
     file: UploadFile,
     model: str = Form(None),
-    ocr_fallback: bool = Form(False),
+    page_range: str = Form(None),
+    header_pages: int = Form(0),
     uid: str = Depends(get_uid),
 ):
     """Analyze a PDF and suggest an extraction schema."""
@@ -516,8 +513,9 @@ async def infer_schema_endpoint(
     try:
         spec = await async_infer_schema(
             tmp_path, uid=uid,
-            ocr_fallback=ocr_fallback,
             model_override=model,
+            page_range=page_range or None,
+            header_pages=header_pages,
         )
         return spec
     except Exception as e:
@@ -551,9 +549,6 @@ async def get_settings_endpoint(
         "anthropic_api_key": mask_key(
             settings.get("anthropic_api_key", "")
         ),
-        "mistral_api_key": mask_key(
-            settings.get("mistral_api_key", "")
-        ),
         "datalab_api_key": mask_key(
             settings.get("datalab_api_key", "")
         ),
@@ -586,11 +581,6 @@ async def save_settings(
     ):
         updates["anthropic_api_key"] = body["anthropic_api_key"]
     if (
-        "mistral_api_key" in body
-        and "..." not in body["mistral_api_key"]
-    ):
-        updates["mistral_api_key"] = body["mistral_api_key"]
-    if (
         "datalab_api_key" in body
         and "..." not in body["datalab_api_key"]
     ):
@@ -607,9 +597,6 @@ async def save_settings(
         ),
         "anthropic_api_key": mask_key(
             settings.get("anthropic_api_key", "")
-        ),
-        "mistral_api_key": mask_key(
-            settings.get("mistral_api_key", "")
         ),
         "datalab_api_key": mask_key(
             settings.get("datalab_api_key", "")
@@ -637,8 +624,6 @@ async def validate_key_endpoint(
         valid, message = await validate_openai_key(key)
     elif provider == "anthropic":
         valid, message = await validate_anthropic_key(key)
-    elif provider == "mistral":
-        valid, message = await validate_mistral_key(key)
     elif provider == "datalab":
         valid, message = await validate_datalab_key(key)
     else:

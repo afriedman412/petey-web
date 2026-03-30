@@ -83,6 +83,8 @@ body {
 }
 .runs-table tr { cursor: pointer; transition: background 0.1s; }
 .runs-table tbody tr:hover { background: var(--surface); }
+.runs-table tr.detail-row { cursor: default; }
+.runs-table tr.detail-row:hover { background: transparent; }
 
 .status-badge {
   display: inline-block; font-size: 0.68rem; font-weight: 600;
@@ -144,7 +146,7 @@ body {
     <div class="empty-state">Loading...</div>
   </div>
 
-  <div id="runDetail" class="run-detail"></div>
+  <!-- detail panel is injected inline after the clicked row -->
 
 </main>
 
@@ -213,7 +215,6 @@ async function getLocalResults(runId) {
 // Render
 // ---------------------------------------------------------------------------
 const content = document.getElementById('runsContent');
-const detail = document.getElementById('runDetail');
 let currentRuns = [];
 
 async function loadRuns() {
@@ -284,44 +285,67 @@ async function showDetail(runId) {
   const run = currentRuns.find(r => r.id === runId);
   if (!run) return;
 
+  // Close any already-open detail row
+  const existing = content.querySelector('.detail-row');
+  const wasThisRow = existing && existing.dataset.id === runId;
+  if (existing) existing.remove();
+  // Toggle off if clicking the same row
+  if (wasThisRow) return;
+
+  // Find the clicked row and get column count for the colspan
+  const clickedRow = content.querySelector('tr[data-id="' + runId + '"]');
+  if (!clickedRow) return;
+  const colCount = clickedRow.children.length;
+
   const local = await getLocalResults(runId);
   const hasResults = local && local.records && local.records.length > 0;
 
-  let html = '<div class="detail-grid">';
-  html += '<div class="detail-item"><label>File</label><span>' + (run.filename || '—') + '</span></div>';
-  html += '<div class="detail-item"><label>Status</label><span class="status-badge ' + run.status + '">' + run.status + '</span></div>';
-  html += '<div class="detail-item"><label>Model</label><span>' + (run.model || '—') + '</span></div>';
-  html += '<div class="detail-item"><label>Parser</label><span>' + (run.parser || '—') + '</span></div>';
-  html += '<div class="detail-item"><label>Mode</label><span>' + (run.mode || '—') + '</span></div>';
+  let inner = '<div class="run-detail open">';
+  inner += '<div class="detail-grid">';
+  inner += '<div class="detail-item"><label>File</label><span>' + (run.filename || '—') + '</span></div>';
+  inner += '<div class="detail-item"><label>Status</label><span class="status-badge ' + run.status + '">' + run.status + '</span></div>';
+  inner += '<div class="detail-item"><label>Model</label><span>' + (run.model || '—') + '</span></div>';
+  inner += '<div class="detail-item"><label>Parser</label><span>' + (run.parser || '—') + '</span></div>';
+  inner += '<div class="detail-item"><label>Mode</label><span>' + (run.mode || '—') + '</span></div>';
   if (run.mode === 'table') {
-    html += '<div class="detail-item"><label>Pages Parsed</label><span>' + run.pages_parsed + ' / ' + (run.total_pages || '?') + '</span></div>';
-    html += '<div class="detail-item"><label>Pages Extracted</label><span>' + run.pages_extracted + ' / ' + (run.total_pages || '?') + '</span></div>';
+    inner += '<div class="detail-item"><label>Pages Parsed</label><span>' + run.pages_parsed + ' / ' + (run.total_pages || '?') + '</span></div>';
+    inner += '<div class="detail-item"><label>Pages Extracted</label><span>' + run.pages_extracted + ' / ' + (run.total_pages || '?') + '</span></div>';
   }
-  html += '<div class="detail-item"><label>Started</label><span>' + formatDate(run.started_at) + '</span></div>';
-  html += '<div class="detail-item"><label>Duration</label><span>' + duration(run.started_at, run.finished_at) + '</span></div>';
+  inner += '<div class="detail-item"><label>Started</label><span>' + formatDate(run.started_at) + '</span></div>';
+  inner += '<div class="detail-item"><label>Duration</label><span>' + duration(run.started_at, run.finished_at) + '</span></div>';
   if (run.instructions) {
-    html += '<div class="detail-item" style="grid-column:1/-1;"><label>Instructions</label><span>' + run.instructions + '</span></div>';
+    inner += '<div class="detail-item" style="grid-column:1/-1;"><label>Instructions</label><span>' + run.instructions + '</span></div>';
   }
-  html += '</div>';
+  inner += '</div>';
 
-  html += '<div class="detail-actions">';
-  html += '<button class="detail-btn primary" id="detailLoad" data-id="' + run.id + '">Load settings in Extractor</button>';
+  inner += '<div class="detail-actions">';
+  inner += '<button class="detail-btn primary btn-load">Load settings in Extractor</button>';
   if (hasResults) {
-    html += '<button class="detail-btn" id="detailDownloadJSON" data-id="' + run.id + '">Download JSON</button>';
-    html += '<button class="detail-btn" id="detailDownloadCSV" data-id="' + run.id + '">Download CSV</button>';
+    inner += '<button class="detail-btn btn-json">Download JSON</button>';
+    inner += '<button class="detail-btn btn-csv">Download CSV</button>';
   } else {
-    html += '<span style="font-size:0.75rem; color:var(--text-dim); align-self:center;">No cached results (extracted on another device or cleared)</span>';
+    inner += '<span style="font-size:0.75rem; color:var(--text-dim); align-self:center;">No cached results (extracted on another device or cleared)</span>';
   }
-  html += '<button class="detail-btn danger" id="detailDelete" data-id="' + run.id + '" style="margin-left:auto;">Delete</button>';
-  html += '</div>';
+  inner += '<button class="detail-btn danger btn-delete" style="margin-left:auto;">Delete</button>';
+  inner += '</div>';
+  inner += '</div>';
 
-  detail.innerHTML = html;
-  detail.classList.add('open');
-  detail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  // Insert a new table row right after the clicked one
+  const detailRow = document.createElement('tr');
+  detailRow.className = 'detail-row';
+  detailRow.dataset.id = runId;
+  const td = document.createElement('td');
+  td.colSpan = colCount;
+  td.style.padding = '0';
+  td.style.borderBottom = 'none';
+  td.innerHTML = inner;
+  detailRow.appendChild(td);
+  clickedRow.after(detailRow);
 
   // Wire up buttons
-  document.getElementById('detailLoad').addEventListener('click', () => {
-    // Encode run config into URL params and navigate to builder
+  const panel = detailRow.querySelector('.run-detail');
+
+  panel.querySelector('.btn-load').addEventListener('click', () => {
     const params = new URLSearchParams();
     params.set('run', run.id);
     if (run.schema_spec) params.set('schema', JSON.stringify(run.schema_spec));
@@ -332,7 +356,7 @@ async function showDetail(runId) {
   });
 
   if (hasResults) {
-    document.getElementById('detailDownloadJSON').addEventListener('click', async () => {
+    panel.querySelector('.btn-json').addEventListener('click', async () => {
       const data = await getLocalResults(run.id);
       const blob = new Blob([JSON.stringify(data.records, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -341,7 +365,7 @@ async function showDetail(runId) {
       a.click(); URL.revokeObjectURL(url);
     });
 
-    document.getElementById('detailDownloadCSV').addEventListener('click', async () => {
+    panel.querySelector('.btn-csv').addEventListener('click', async () => {
       const data = await getLocalResults(run.id);
       if (!data.records || !data.records.length) return;
       const rows = data.records;
@@ -362,16 +386,15 @@ async function showDetail(runId) {
     });
   }
 
-  document.getElementById('detailDelete').addEventListener('click', async () => {
+  panel.querySelector('.btn-delete').addEventListener('click', async () => {
     if (!confirm('Delete this run from history?')) return;
     await authFetch('/runs/' + run.id, { method: 'DELETE' });
-    // Also remove from IndexedDB
     try {
       const db = await openDB();
       const tx = db.transaction('results', 'readwrite');
       tx.objectStore('results').delete(run.id);
     } catch (_) {}
-    detail.classList.remove('open');
+    detailRow.remove();
     currentRuns = currentRuns.filter(r => r.id !== run.id);
     renderTable();
   });

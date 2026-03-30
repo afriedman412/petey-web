@@ -5,7 +5,6 @@ Accepts a PDF + page index, returns extracted text.
 Deployed as its own Cloud Run service or run locally alongside
 the main petey-web app.
 """
-import io
 import tempfile
 from pathlib import Path
 
@@ -108,55 +107,7 @@ async def page_count(file: UploadFile = File(...)):
     return {"page_count": count}
 
 
-@app.post("/ocr", response_model=ParseResponse)
-async def ocr_pdf(
-    file: UploadFile = File(...),
-    ocr_backend: str = Form("tesseract"),
-):
-    """OCR all pages of a PDF and return text."""
-    pdf_bytes = await file.read()
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    pages = []
-    for page in doc:
-        pix = page.get_pixmap(dpi=200)
-        img_bytes = pix.tobytes("png")
-        text = _ocr_image(img_bytes, ocr_backend)
-        pages.append(text)
-    doc.close()
-    return ParseResponse(
-        text="\n\n".join(pages),
-        page_count=len(pages),
-    )
-
-
-@app.post("/ocr/page", response_model=ParsePageResponse)
-async def ocr_page(
-    file: UploadFile = File(...),
-    page_index: int = Form(...),
-    ocr_backend: str = Form("tesseract"),
-):
-    """OCR a single page of a PDF."""
-    pdf_bytes = await file.read()
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    if page_index < 0 or page_index >= len(doc):
-        raise HTTPException(400, f"page_index {page_index} out of range")
-    pix = doc[page_index].get_pixmap(dpi=200)
-    doc.close()
-    text = _ocr_image(pix.tobytes("png"), ocr_backend)
-    return ParsePageResponse(text=text, page_index=page_index)
-
-
 # --- Internal helpers ---
-
-def _ocr_image(img_bytes: bytes, backend: str = "tesseract") -> str:
-    """OCR a PNG image and return text."""
-    if backend != "tesseract":
-        raise HTTPException(400, f"Unknown OCR backend: {backend}")
-    import pytesseract
-    from PIL import Image
-    img = Image.open(io.BytesIO(img_bytes))
-    return pytesseract.image_to_string(img)
-
 
 def _extract_pages(pdf_bytes: bytes, parser: str) -> list[str]:
     """Extract text from all pages of a PDF."""
@@ -166,8 +117,6 @@ def _extract_pages(pdf_bytes: bytes, parser: str) -> list[str]:
     try:
         if parser == "pymupdf":
             return _pymupdf_pages(tmp_path)
-        elif parser == "tables":
-            return _tables_pages(pdf_bytes)
         elif parser == "pdfplumber":
             return _pdfplumber_pages(tmp_path)
         else:
@@ -189,8 +138,6 @@ def _extract_single_page(
     try:
         if parser == "pymupdf":
             return _pymupdf_single(tmp_path, page_index)
-        elif parser == "tables":
-            return _tables_single(pdf_bytes, page_index)
         elif parser == "pdfplumber":
             return _pdfplumber_single(tmp_path, page_index)
         else:
@@ -227,39 +174,6 @@ def _pymupdf_single(pdf_path: str, page_index: int) -> str:
         text = doc[page_index].get_text("text")
         doc.close()
         return text
-
-
-def _tables_pages(pdf_bytes: bytes) -> list[str]:
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    pages = []
-    for page in doc:
-        pages.append(_tables_page(page))
-    doc.close()
-    return pages
-
-
-def _tables_single(pdf_bytes: bytes, page_index: int) -> str:
-    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    text = _tables_page(doc[page_index])
-    doc.close()
-    return text
-
-
-def _tables_page(page) -> str:
-    found = page.find_tables()
-    if found.tables:
-        parts = []
-        for table in found.tables:
-            rows = table.extract()
-            tsv = "\n".join(
-                "\t".join(str(cell) if cell else "" for cell in row)
-                for row in rows
-                if any(cell for cell in row)
-            )
-            if tsv:
-                parts.append(tsv)
-        return "\n\n".join(parts) if parts else page.get_text("text")
-    return page.get_text("text")
 
 
 def _pdfplumber_pages(pdf_path: str) -> list[str]:

@@ -3,8 +3,8 @@ Client for the standalone parser service.
 
 Provides async callables that match the parse_fn signature
 expected by petey's extract functions:
-  - parse_fn(pdf_path, parser, ocr_backend) -> str
-  - page_parse_fn(pdf_path, page_index, parser, ocr_backend) -> str
+  - parse_fn(pdf_path, parser) -> str
+  - page_parse_fn(pdf_path, page_index, parser) -> str
 """
 import os
 
@@ -30,7 +30,6 @@ def _get_client() -> httpx.AsyncClient:
 async def parse_fn(
     pdf_path: str,
     parser: str = "pymupdf",
-    ocr_backend: str = "none",
 ) -> str:
     """Parse all pages of a PDF via the parser service.
 
@@ -51,7 +50,6 @@ async def page_parse_fn(
     pdf_path: str,
     page_index: int,
     parser: str = "pymupdf",
-    ocr_backend: str = "none",
 ) -> str:
     """Parse a single page of a PDF via the parser service.
 

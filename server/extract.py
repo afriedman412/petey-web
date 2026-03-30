@@ -30,15 +30,13 @@ _build_model = build_model
 async def extract_text(
     pdf_path: str,
     *,
-    ocr_fallback: bool = True,
     page_range: str | None = None,
     header_pages: int = 0,
 ) -> tuple[str, list[str]]:
-    """Extract text from PDF with optional OCR fallback.
+    """Extract text from PDF.
 
     Returns (text, info_messages).
-    info_messages contains human-readable status like
-    "No usable text layer, using OCR".
+    info_messages contains human-readable status messages.
     """
     info = []
 
@@ -52,7 +50,7 @@ async def extract_text(
         pages = []
         for i in range(total):
             pages.append(await _remote_page_parse_fn(
-                pdf_path, i, "pymupdf", "none",
+                pdf_path, i, "pymupdf",
             ))
 
         parts = []
@@ -66,19 +64,7 @@ async def extract_text(
             parts.extend(pages[header_pages:])
         text = "\n\n".join(parts)
     else:
-        text = await _remote_parse_fn(pdf_path, "pymupdf", "none")
-
-    if ocr_fallback and len(text.strip()) < 200:
-        info.append("No usable text layer detected, using OCR")
-        try:
-            from server.par_extract import _ocr_pdf
-            ocr_text = _ocr_pdf(pdf_path, force=True)
-            if ocr_text and len(ocr_text.strip()) > len(text.strip()):
-                text = ocr_text
-            else:
-                info.append("OCR did not produce usable text")
-        except Exception as e:
-            info.append(f"OCR failed: {e}")
+        text = await _remote_parse_fn(pdf_path, "pymupdf")
 
     return text, info
 
@@ -100,12 +86,10 @@ async def async_extract(
     uid: str,
     instructions: str = "",
     parser: str = "pymupdf",
-    ocr_fallback: bool = False,
-    ocr_backend: str = "none",
     text: str | None = None,
 ) -> BaseModel:
     """Extract using the model/key from the user's settings."""
-    _set_ocr_env(uid)
+    _set_api_keys(uid)
     settings = get_settings(uid)
     model_id = settings["model"]
     provider = get_provider(model_id)
@@ -124,7 +108,7 @@ async def async_extract(
                 "Add one in Settings before extracting."
             )
 
-    # API-based parsers (marker, etc.) are handled directly by petey —
+    # API-based parsers (datalab, etc.) are handled directly by petey —
     # only local parsers need the remote parse service.
     use_remote = not asyncio.iscoroutinefunction(PARSERS.get(parser))
 
@@ -137,19 +121,16 @@ async def async_extract(
         model=model_id, api_key=api_key,
         instructions=instructions,
         parser=parser,
-        ocr_fallback=ocr_fallback,
-        ocr_backend=ocr_backend,
         text=text,
         parse_fn=_remote_parse_fn if use_remote else None,
     )
 
 
-def _set_ocr_env(uid: str):
-    """Set OCR API key env vars from user settings."""
+def _set_api_keys(uid: str):
+    """Set API key env vars from user settings."""
     import os
     settings = get_settings(uid)
     for key_name, env_var in [
-        ("mistral_api_key", "MISTRAL_API_KEY"),
         ("datalab_api_key", "DATALAB_API_KEY"),
     ]:
         val = settings.get(key_name, "")
@@ -192,7 +173,7 @@ async def async_extract_pages(
     on_parse=None,
 ) -> list[dict]:
     """Page-chunked extraction using the user's settings."""
-    _set_ocr_env(uid)
+    _set_api_keys(uid)
     model_id, api_key = _get_api_key(uid)
     settings = get_settings(uid)
     concurrency = settings.get("concurrency", 10)
@@ -218,21 +199,29 @@ async def async_extract_pages(
 async def async_infer_schema(
     pdf_path: str,
     uid: str,
-    ocr_fallback: bool = False,
     max_pages: int = 2,
     model_override: str | None = None,
+    page_range: str | None = None,
+    header_pages: int = 0,
 ) -> dict:
     """Infer a schema from a sample PDF using the user's settings."""
-    model_id, api_key = _get_api_key(uid)
-    if model_override:
-        model_id = model_override
-    return await _infer_schema_async(
-        pdf_path,
+    settings = get_settings(uid)
+    model_id = model_override or settings["model"]
+    provider = get_provider(model_id)
+    if provider == "anthropic":
+        api_key = settings.get("anthropic_api_key") or None
+    else:
+        api_key = settings.get("openai_api_key") or None
+    kwargs = dict(
         model=model_id,
         api_key=api_key,
-        ocr_fallback=ocr_fallback,
         max_pages=max_pages,
     )
+    if page_range:
+        kwargs["page_range"] = page_range
+    if header_pages:
+        kwargs["header_pages"] = header_pages
+    return await _infer_schema_async(pdf_path, **kwargs)
 
 
 def list_schemas() -> list[dict]:

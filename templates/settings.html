@@ -216,8 +216,7 @@ async function authFetch(url, opts = {}) {
 const KEY_SERVICES = [
   { id: 'openai',    label: 'OpenAI',    settingsKey: 'openai_api_key',    placeholder: 'sk-...' },
   { id: 'anthropic', label: 'Anthropic',  settingsKey: 'anthropic_api_key', placeholder: 'sk-ant-...' },
-  { id: 'mistral',   label: 'Mistral',    settingsKey: 'mistral_api_key',   placeholder: '...' },
-  { id: 'datalab',   label: 'Datalab (Marker)',  settingsKey: 'datalab_api_key',   placeholder: '...' },
+  { id: 'datalab',   label: 'Datalab',   settingsKey: 'datalab_api_key',   placeholder: '...' },
 ];
 
 // --- Dynamic key entries ---
@@ -262,8 +261,8 @@ function renderKeys() {
     // Key input
     const svc = KEY_SERVICES.find(s => s.id === entry.serviceId);
     const inp = document.createElement('input');
-    inp.type = 'password';
-    inp.placeholder = svc ? svc.placeholder : '...';
+    inp.type = entry.masked ? 'password' : 'text';
+    inp.placeholder = svc ? svc.placeholder : 'Enter your key';
     inp.value = entry.value || '';
     inp.autocomplete = 'off';
     inp.addEventListener('change', () => {
@@ -349,19 +348,6 @@ async function doSave() {
       body: JSON.stringify(body),
     });
     if (!resp.ok) throw new Error('Save failed');
-    const data = await resp.json();
-    // Update masked values
-    for (const entry of keyEntries) {
-      const svc = KEY_SERVICES.find(s => s.id === entry.serviceId);
-      if (svc && data[svc.settingsKey]) {
-        entry.value = data[svc.settingsKey];
-        entry.masked = true;
-      }
-    }
-    renderKeys();
-    statusEl.className = 'status ok';
-    statusEl.textContent = 'Saved';
-    setTimeout(() => { statusEl.textContent = ''; }, 2000);
   } catch (e) {
     statusEl.className = 'status err';
     statusEl.textContent = 'Error: ' + e.message;

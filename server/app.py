@@ -193,22 +193,10 @@ async def extract_endpoint(
         Path(tmp_path).unlink(missing_ok=True)
         return JSONResponse({"error": page_err}, 400)
 
-    # Text mode: parse PDF, optionally clean up with LLM
+    # Text mode: parse PDF, return raw text
     if text_only:
         try:
             text, info = await extract_text(tmp_path)
-            if settings["model"] != "none" and provider != "none":
-                from pydantic import BaseModel as _BM, Field as _F
-                class _TextOut(_BM):
-                    text: str = _F(description="The cleaned up, structured text")
-                result = await async_extract(
-                    tmp_path, _TextOut,
-                    uid=uid,
-                    instructions="Clean up and structure this text. Fix any OCR errors. Return as readable prose.",
-                    parser=parser,
-                    text=text,
-                )
-                text = result.text if hasattr(result, 'text') else result.model_dump().get('text', text)
             data = {
                 "_source_file": file.filename,
                 "text": text,

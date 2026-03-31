@@ -9,8 +9,7 @@ WEB_IMAGE = us-east1-docker.pkg.dev/petey-dev/petey/web:latest
 .PHONY: venv install run deploy deploy-web deploy-parser build-base clean
 
 venv:
-	python3 -m venv $(VENV)
-	$(PIP) install -e .
+	@if [ ! -d "$(VENV)" ]; then python3 -m venv $(VENV) && $(PIP) install -e .; fi
 
 install: venv
 

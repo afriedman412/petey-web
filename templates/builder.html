@@ -243,6 +243,8 @@ body {
   font-family: inherit; transition: all 0.15s;
 }
 .schema-btn:hover { border-color: var(--accent); color: var(--accent); }
+@keyframes pulse-fade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.schema-btn.analyzing { color: var(--accent); border-color: var(--accent); animation: pulse-fade 1.5s ease-in-out infinite; }
 
 /* STATUS + PROGRESS */
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
@@ -353,7 +355,8 @@ table.results tr:hover td { background: var(--surface-2); }
       <select id="parserSelect" style="background:var(--surface-2); border:1px solid var(--border); border-radius:4px; color:var(--text); padding:0.2rem 0.4rem; font-size:0.78rem; font-family:inherit;">
         <option value="pymupdf">PyMuPDF</option>
         <option value="pdfplumber">pdfplumber</option>
-        <option value="datalab">Datalab</option>
+        <option value="datalab">Datalab (Marker)</option>
+        <option value="unstructured">Unstructured</option>
       </select>
     </label>
     <label style="display:flex; align-items:center; gap:0.4rem; font-size:0.8rem; color:var(--text-muted); margin-left:0.5rem;">
@@ -567,7 +570,7 @@ async function startRun(filename, spec, instructions, totalPages) {
         filename,
         schema_spec: spec,
         instructions: instructions || '',
-        model: settings.model || '',
+        model: document.getElementById('modelSelect')?.value || settings.model || '',
         parser: spec.parser || document.getElementById('parserSelect')?.value || 'pymupdf',
         mode: spec.mode || 'query',
         concurrency: settings.concurrency || 10,
@@ -877,9 +880,8 @@ document.getElementById('yamlFile').addEventListener('change', e => {
   reader.readAsText(file);
 });
 
-// Suggest fields from a sample PDF
+// Suggest fields from a sample PDF (vision-based)
 document.getElementById('suggestFields').addEventListener('click', () => {
-  // Use already-loaded file if available, otherwise open picker
   if (selectedFiles.length > 0) {
     _runSuggest(selectedFiles[Math.floor(Math.random() * selectedFiles.length)]);
   } else {
@@ -894,9 +896,11 @@ document.getElementById('suggestFile').addEventListener('change', async e => {
 });
 
 async function _runSuggest(file) {
+  const endpoint = '/infer-schema/vision';
   const btn = document.getElementById('suggestFields');
   const origText = btn.textContent;
   btn.textContent = 'Analyzing...';
+  btn.classList.add('analyzing');
   btn.disabled = true;
   try {
     const form = new FormData();
@@ -907,7 +911,7 @@ async function _runSuggest(file) {
     if (pr) form.append('page_range', pr);
     const hp = parseInt(document.getElementById('headerPages').value) || 0;
     if (hp > 0) form.append('header_pages', hp);
-    const resp = await authFetch('/infer-schema', { method: 'POST', body: form });
+    const resp = await authFetch(endpoint, { method: 'POST', body: form });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       throw new Error(err.error || 'Schema inference failed');
@@ -927,6 +931,7 @@ async function _runSuggest(file) {
     alert(err.message);
   } finally {
     btn.textContent = origText;
+    btn.classList.remove('analyzing');
     btn.disabled = false;
   }
 }
@@ -1099,19 +1104,29 @@ extractBtn.addEventListener('click', async () => {
   const useStream = recordType === 'table' && total === 1;
   sp.style.display = '';
   st.textContent = 'Extracting...';
+  const _extractStart = Date.now();
 
   // Track file-level progress for multi-file, page-level for single stream
   let sent = 0, done = 0;
   let spicyParsed = 0, spicyExtracted = 0;
-  let totalLabel = _cachedPageCount ? String(_cachedPageCount) : 'counting...';
-
-  // Background page count may still be in flight — poll for it
-  function updateTotalLabel() {
-    if (_cachedPageCount && totalLabel === 'counting...') {
-      totalLabel = String(_cachedPageCount);
-      updateRunProgress(runId, { total_pages: _cachedPageCount });
+  // Estimate chunk count from page range if available
+  let totalLabel = 'counting...';
+  const _pr = document.getElementById('pageRange').value.trim();
+  if (_pr) {
+    let _cnt = 0;
+    for (const part of _pr.split(',')) {
+      const p = part.trim();
+      if (p.includes('-')) {
+        const [a, b] = p.split('-').map(Number);
+        _cnt += Math.max(0, b - a + 1);
+      } else { _cnt++; }
     }
+    const _hp = parseInt(document.getElementById('headerPages').value) || 0;
+    _cnt = Math.max(0, _cnt - _hp);
+    if (_cnt > 0) totalLabel = String(_cnt);
   }
+
+  function updateTotalLabel() {}
 
   function updateBars() {
     updateTotalLabel();
@@ -1155,7 +1170,7 @@ extractBtn.addEventListener('click', async () => {
             if (evt.type === 'parse') {
               spicyParsed++;
               stotal = evt.total;
-              if (spicyParsed === 1 && !_cachedPageCount) {
+              if (spicyParsed === 1) {
                 _cachedPageCount = stotal;
                 totalLabel = String(stotal);
                 updateRunProgress(runId, { total_pages: stotal });
@@ -1240,7 +1255,8 @@ extractBtn.addEventListener('click', async () => {
   const finalParsed = spicyParsed || completed;
   const finalExtracted = spicyExtracted || completed;
   finishRun(runId, 'completed', finalParsed, finalExtracted);
-  let statusText = 'Done — ' + total + ' file' + (total > 1 ? 's' : '') + ' processed.';
+  const _elapsed = ((Date.now() - _extractStart) / 1000).toFixed(1);
+  let statusText = 'Done — ' + total + ' file' + (total > 1 ? 's' : '') + ' processed (' + _elapsed + 's).';
   if (warnings.length) {
     statusText += '\nWarnings:\n' + warnings.join('\n');
   }
@@ -1256,15 +1272,13 @@ extractBtn.addEventListener('click', async () => {
     renderTextResults(allResults);
   } else if (allRecords.length) {
     if (allRecords.length > AUTO_FILE_THRESHOLD) {
-      autoDownloadCsv(allRecords);
-      results.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Large result set (' + allRecords.length + ' records) — downloaded as CSV.</p>';
+      renderTablePreview(allRecords);
     } else {
       renderTable(allRecords);
     }
   } else if (allResults.length) {
     if (allResults.length > AUTO_FILE_THRESHOLD) {
-      autoDownloadJson(allResults);
-      results.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Large result set (' + allResults.length + ' results) — downloaded as JSON.</p>';
+      renderTablePreview(allResults);
     } else if (allResults.length === 1) {
       renderSingleResult(allResults[0]);
     } else {
@@ -1372,6 +1386,51 @@ function renderSingleResult(data) {
   const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const jsonUrl = URL.createObjectURL(jsonBlob);
   html += '<a class="download-btn" href="' + jsonUrl + '" download="' + extractedFilename('json') + '">Download JSON</a>';
+
+  results.innerHTML = html;
+}
+
+function renderTablePreview(records) {
+  const PREVIEW_ROWS = 5;
+  const { flatRecords, allKeys } = flattenRecords(records);
+  const preview = flatRecords.slice(0, PREVIEW_ROWS);
+
+  let html = '<p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem;">' + records.length + ' records — showing first ' + PREVIEW_ROWS + '</p>';
+  html += '<div class="table-wrap"><table class="results"><thead><tr>';
+  for (const k of allKeys) html += '<th>' + k + '</th>';
+  html += '</tr></thead><tbody>';
+  for (const row of preview) {
+    html += '<tr>';
+    for (const k of allKeys) {
+      const v = row[k];
+      html += '<td>' + (v != null ? String(v).replace(/</g,'&lt;') : '') + '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table></div>';
+
+  const csvRows = [allKeys.join(',')];
+  for (const row of flatRecords) {
+    csvRows.push(allKeys.map(k => {
+      const s = row[k] != null ? String(row[k]) : '';
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? '"' + s.replace(/"/g, '""') + '"' : s;
+    }).join(','));
+  }
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  html += '<a class="download-btn" href="' + url + '" download="' + extractedFilename('csv') + '">Download CSV</a>';
+
+  const jsonBlob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+  const jsonUrl = URL.createObjectURL(jsonBlob);
+  html += '<a class="download-btn" href="' + jsonUrl + '" download="' + extractedFilename('json') + '">Download JSON</a>';
+
+  const schemaSpec = buildSpec();
+  const schemaYaml = specToYaml(schemaSpec);
+  const schemaBlob = new Blob([schemaYaml], { type: 'text/yaml' });
+  const schemaUrl = URL.createObjectURL(schemaBlob);
+  const schemaFilename = (schemaSpec.name || 'schema').toLowerCase().replace(/\s+/g, '_') + '.yaml';
+  html += '<a class="download-btn" href="' + schemaUrl + '" download="' + schemaFilename + '">Download Schema</a>';
 
   results.innerHTML = html;
 }

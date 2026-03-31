@@ -13,6 +13,7 @@ from petey.extract import (
     extract_async as _extract_async,
     extract_pages_async as _extract_pages_async,
     infer_schema_async as _infer_schema_async,
+    infer_schema_vision_async as _infer_schema_vision_async,
     TEXT_WARN_THRESHOLD,
     PARSERS,
 )  # noqa: E501
@@ -222,6 +223,34 @@ async def async_infer_schema(
     if header_pages:
         kwargs["header_pages"] = header_pages
     return await _infer_schema_async(pdf_path, **kwargs)
+
+
+async def async_infer_schema_vision(
+    pdf_path: str,
+    uid: str,
+    max_pages: int = 2,
+    model_override: str | None = None,
+    page_range: str | None = None,
+    header_pages: int = 0,
+) -> dict:
+    """Infer a schema using vision (PDF pages as images)."""
+    settings = get_settings(uid)
+    model_id = model_override or settings["model"]
+    provider = get_provider(model_id)
+    if provider == "anthropic":
+        api_key = settings.get("anthropic_api_key") or None
+    else:
+        api_key = settings.get("openai_api_key") or None
+    kwargs = dict(
+        model=model_id,
+        api_key=api_key,
+        max_pages=max_pages,
+    )
+    if page_range:
+        kwargs["page_range"] = page_range
+    if header_pages:
+        kwargs["header_pages"] = header_pages
+    return await _infer_schema_vision_async(pdf_path, **kwargs)
 
 
 def list_schemas() -> list[dict]:

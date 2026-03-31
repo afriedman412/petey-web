@@ -154,7 +154,14 @@ class DropZone extends HTMLElement {
   clearGate() {
     this._gated = false;
     this._dz.classList.remove('gated');
-    this._label.textContent = 'Drop PDFs here, or click to select';
+    if (this._files && this._files.length > 0) {
+      const names = this._files.map(f => f.name);
+      this._label.textContent = names.length === 1
+        ? names[0]
+        : names.length + ' files selected';
+    } else {
+      this._label.textContent = 'Drop PDFs here, or click to select';
+    }
     this._fileInput.disabled = false;
   }
 

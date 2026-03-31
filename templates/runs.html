@@ -251,7 +251,10 @@ function renderTable() {
     return;
   }
 
-  let html = '<table class="runs-table"><thead><tr>';
+  let html = '<div style="display:flex; justify-content:flex-end; margin-bottom:0.5rem;">';
+  html += '<button id="clearAllRuns" style="font-size:0.72rem; color:var(--text-dim); background:none; border:1px solid var(--border); border-radius:5px; padding:0.3rem 0.7rem; cursor:pointer; font-family:inherit; transition:all 0.15s;">Clear all</button>';
+  html += '</div>';
+  html += '<table class="runs-table"><thead><tr>';
   html += '<th>File</th><th>Status</th><th>Mode</th><th>Model</th>';
   html += '<th>Files</th><th>Pages</th><th>Date</th><th>Duration</th>';
   html += '</tr></thead><tbody>';
@@ -279,6 +282,22 @@ function renderTable() {
   content.querySelectorAll('tr[data-id]').forEach(row => {
     row.addEventListener('click', () => showDetail(row.dataset.id));
   });
+
+  const clearBtn = document.getElementById('clearAllRuns');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', async () => {
+      if (!confirm('Clear all runs?')) return;
+      clearBtn.textContent = 'Clearing...';
+      clearBtn.disabled = true;
+      for (const run of [...currentRuns]) {
+        try {
+          await authFetch('/runs/' + run.id, { method: 'DELETE' });
+        } catch (_) {}
+      }
+      currentRuns = [];
+      renderTable();
+    });
+  }
 }
 
 async function showDetail(runId) {

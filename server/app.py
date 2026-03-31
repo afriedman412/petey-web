@@ -18,7 +18,7 @@ from server.extract import (
     async_extract, async_extract_pages, load_schema,
     list_schemas, SCHEMAS_DIR, _build_model,
     extract_text, check_text_length, async_infer_schema,
-    PARSERS,
+    async_infer_schema_vision, PARSERS,
 )
 from server.par_extract import async_process_file as par_process_file, extract_text as par_extract_text
 from server.settings import (
@@ -45,16 +45,26 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 MAX_PAGES = int(os.environ.get("MAX_PAGES", "10"))
 
 
-def _check_page_limit(pdf_path: str) -> str | None:
+def _check_page_limit(
+    pdf_path: str, page_range: str | None = None,
+) -> str | None:
     """Return an error message if the PDF exceeds MAX_PAGES, else None."""
     if not MAX_PAGES:
         return None
     import fitz
     doc = fitz.open(pdf_path)
-    n = len(doc)
+    total = len(doc)
     doc.close()
+    if page_range:
+        from petey.extract import _parse_page_range
+        n = len(_parse_page_range(page_range, total))
+    else:
+        n = total
     if n > MAX_PAGES:
-        return f"PDF has {n} pages (limit is {MAX_PAGES})."
+        return (
+            f"Extraction covers {n} pages "
+            f"(limit is {MAX_PAGES})."
+        )
     return None
 
 _schema_cache: dict[str, type] = {}
@@ -168,7 +178,10 @@ async def extract_endpoint(
     ) as tmp:
         tmp.write(await file.read())
         tmp_path = tmp.name
-    page_err = _check_page_limit(tmp_path)
+    _pr = None
+    if schema_spec:
+        _pr = json.loads(schema_spec).get("pages") or None
+    page_err = _check_page_limit(tmp_path, _pr)
     if page_err:
         Path(tmp_path).unlink(missing_ok=True)
         return JSONResponse({"error": page_err}, 400)
@@ -285,7 +298,9 @@ async def extract_stream_endpoint(
         tmp.write(await file.read())
         tmp_path = tmp.name
 
-    page_err = _check_page_limit(tmp_path)
+    page_err = _check_page_limit(
+        tmp_path, spec.get("pages") or None,
+    )
     if page_err:
         Path(tmp_path).unlink(missing_ok=True)
         return JSONResponse({"error": page_err}, 400)
@@ -512,6 +527,36 @@ async def infer_schema_endpoint(
         tmp_path = tmp.name
     try:
         spec = await async_infer_schema(
+            tmp_path, uid=uid,
+            model_override=model,
+            page_range=page_range or None,
+            header_pages=header_pages,
+        )
+        return spec
+    except Exception as e:
+        return JSONResponse(
+            {"error": str(e)}, status_code=500,
+        )
+    finally:
+        Path(tmp_path).unlink(missing_ok=True)
+
+
+@app.post("/infer-schema/vision")
+async def infer_schema_vision_endpoint(
+    file: UploadFile,
+    model: str = Form(None),
+    page_range: str = Form(None),
+    header_pages: int = Form(0),
+    uid: str = Depends(get_uid),
+):
+    """Suggest schema using vision — sends page images directly."""
+    with tempfile.NamedTemporaryFile(
+        suffix=".pdf", delete=False
+    ) as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+    try:
+        spec = await async_infer_schema_vision(
             tmp_path, uid=uid,
             model_override=model,
             page_range=page_range or None,

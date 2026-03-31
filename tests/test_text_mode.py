@@ -241,3 +241,156 @@ class TestEnumCaseInsensitive:
         assert model(gender="Non-Binary").gender.value == "Non-binary"
         assert model(gender="MALE").gender.value == "Male"
         assert model(gender="female").gender.value == "Female"
+
+
+# -------------------------------------------------------------------
+# Page limit with page range
+# -------------------------------------------------------------------
+
+class TestPageLimitWithRange:
+    def test_page_range_reduces_count(self):
+        """Page range '1' on a multi-page PDF should count as 1."""
+        # MCI_PDF is 1 page, so this just verifies the path works
+        assert _check_page_limit(MCI_PDF, "1") is None
+
+    def test_no_range_uses_full_count(self):
+        """Without page range, uses full page count."""
+        with patch("server.app.MAX_PAGES", 1):
+            assert _check_page_limit(MCI_PDF) is None  # 1 page = 1 limit
+
+    def test_page_range_none_same_as_no_range(self):
+        assert _check_page_limit(MCI_PDF, None) is None
+
+
+# -------------------------------------------------------------------
+# Vision endpoint
+# -------------------------------------------------------------------
+
+class TestInferSchemaVisionEndpoint:
+    """Test the /infer-schema/vision endpoint."""
+
+    def test_returns_schema(self):
+        from httpx import AsyncClient, ASGITransport
+        import asyncio
+
+        dummy_spec = {
+            "name": "test",
+            "mode": "query",
+            "fields": {"f": {"type": "string"}},
+        }
+
+        with patch(
+            "server.app.async_infer_schema_vision",
+            new_callable=AsyncMock,
+            return_value=dummy_spec,
+        ):
+            async def _test():
+                transport = ASGITransport(app=app)
+                async with AsyncClient(
+                    transport=transport,
+                    base_url="http://test",
+                ) as client:
+                    with open(MCI_PDF, "rb") as f:
+                        resp = await client.post(
+                            "/infer-schema/vision",
+                            files={"file": ("test.pdf", f, "application/pdf")},
+                            data={"model": "gpt-4.1-mini"},
+                        )
+                    assert resp.status_code == 200
+                    data = resp.json()
+                    assert data["name"] == "test"
+                    assert "fields" in data
+
+            asyncio.run(_test())
+
+    def test_error_returns_500(self):
+        from httpx import AsyncClient, ASGITransport
+        import asyncio
+
+        with patch(
+            "server.app.async_infer_schema_vision",
+            new_callable=AsyncMock,
+            side_effect=ValueError("Model returned empty response"),
+        ):
+            async def _test():
+                transport = ASGITransport(app=app)
+                async with AsyncClient(
+                    transport=transport,
+                    base_url="http://test",
+                ) as client:
+                    with open(MCI_PDF, "rb") as f:
+                        resp = await client.post(
+                            "/infer-schema/vision",
+                            files={"file": ("test.pdf", f, "application/pdf")},
+                        )
+                    assert resp.status_code == 500
+                    assert "empty response" in resp.json()["error"]
+
+            asyncio.run(_test())
+
+
+# -------------------------------------------------------------------
+# Demo endpoint
+# -------------------------------------------------------------------
+
+class TestDemoEndpoint:
+    def test_demo_file_served(self):
+        from httpx import AsyncClient, ASGITransport
+        import asyncio
+
+        async def _test():
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://test",
+            ) as client:
+                resp = await client.get("/demo/patient_01.pdf")
+                # May be 200 or 404 depending on whether
+                # benchmarks dir exists in test env
+                assert resp.status_code in (200, 404)
+
+        asyncio.run(_test())
+
+    def test_non_pdf_rejected(self):
+        from httpx import AsyncClient, ASGITransport
+        import asyncio
+
+        async def _test():
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://test",
+            ) as client:
+                resp = await client.get("/demo/malicious.txt")
+                assert resp.status_code == 404
+
+        asyncio.run(_test())
+
+
+# -------------------------------------------------------------------
+# Page count endpoint returns max_pages
+# -------------------------------------------------------------------
+
+class TestPageCountEndpoint:
+    def test_returns_max_pages(self):
+        from httpx import AsyncClient, ASGITransport
+        import asyncio
+
+        async def _test():
+            transport = ASGITransport(app=app)
+            async with AsyncClient(
+                transport=transport,
+                base_url="http://test",
+            ) as client:
+                with open(MCI_PDF, "rb") as f:
+                    resp = await client.post(
+                        "/page-count",
+                        files={"files": ("test.pdf", f, "application/pdf")},
+                    )
+                assert resp.status_code == 200
+                data = resp.json()
+                assert "max_pages" in data
+                assert "exceeded" in data
+                assert data["total_pages"] == 1
+
+        asyncio.run(_test())

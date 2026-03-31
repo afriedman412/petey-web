@@ -81,20 +81,89 @@ body {
 .wizard-step.visible { display: block; animation: fadeIn 0.2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-/* USE CASE CARDS */
-.case-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.case-card {
+/* LIGHTBOX */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; cursor: zoom-out; animation: fadeIn 0.15s ease;
+}
+.lightbox img { max-width: 90vw; max-height: 90vh; border-radius: var(--r-lg); }
+.demo-thumb { cursor: zoom-in; transition: opacity 0.15s; }
+.demo-thumb:hover { opacity: 0.85; }
+
+/* DEMO EXPLAINER */
+.demo-explainer {
+  background: var(--accent-dim); border: 1px solid var(--accent);
+  border-radius: var(--r-lg); padding: 1.1rem 1.25rem; margin-bottom: 1.25rem;
+  font-size: 0.82rem; line-height: 1.6; color: var(--text);
+  display: none;
+}
+.demo-explainer.visible { display: block; animation: fadeIn 0.3s ease; }
+.demo-explainer strong { color: var(--accent); }
+.demo-explainer .demo-label {
+  font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 0.4rem;
+}
+.demo-explainer .demo-disclaimer {
+  font-size: 0.7rem; color: var(--text-dim); margin-top: 0.5rem;
+  font-style: italic;
+}
+
+/* MODE CARDS */
+.mode-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.mode-card {
   background: var(--surface); border: 1.5px solid var(--border);
   border-radius: var(--r-lg); padding: 1.5rem; cursor: pointer;
   transition: all 0.2s;
 }
-.case-card:hover { border-color: var(--accent); background: var(--accent-dim); }
-.case-card.selected { border-color: var(--accent); background: var(--accent-dim); }
-.case-card .case-icon { font-size: 1.6rem; margin-bottom: 0.6rem; }
-.case-card .case-title {
+.mode-card:hover { border-color: var(--accent); background: var(--accent-dim); }
+.mode-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+.mode-card .mode-title {
   font-size: 0.92rem; font-weight: 600; margin-bottom: 0.35rem; line-height: 1.3;
 }
-.case-card .case-desc { font-size: 0.78rem; color: var(--text-dim); line-height: 1.5; }
+.mode-card .mode-desc { font-size: 0.78rem; color: var(--text-dim); line-height: 1.5; }
+
+/* PARSER CARDS */
+.parser-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+.parser-card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--r-lg); padding: 1.1rem 1.25rem; cursor: pointer;
+  transition: all 0.2s;
+}
+.parser-card:hover { border-color: var(--text-dim); }
+.parser-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+.parser-card .parser-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.25rem; }
+.parser-card .parser-desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.45; }
+
+/* CONFIG FORM */
+.config-form { display: flex; flex-direction: column; gap: 1.25rem; }
+.config-group label {
+  display: block; font-size: 0.76rem; color: var(--text-muted);
+  margin-bottom: 0.35rem; font-weight: 500;
+}
+.config-group input[type=number], .config-group input[type=text] {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text); padding: 0.35rem 0.5rem;
+  font-size: 0.82rem; font-family: inherit; transition: border-color 0.15s;
+}
+.config-group input:focus { outline: none; border-color: var(--accent); }
+.config-group select {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 4px; color: var(--text); padding: 0.35rem 0.5rem;
+  font-size: 0.82rem; font-family: inherit; transition: border-color 0.15s;
+}
+.config-group select:focus { outline: none; border-color: var(--accent); }
+.config-group select option { background: var(--surface-2); color: var(--text); }
+.config-group textarea {
+  width: 100%; min-height: 60px; font-size: 0.82rem;
+  padding: 0.48rem 0.6rem; background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 4px;
+  font-family: inherit; resize: vertical; color: var(--text);
+  transition: border-color 0.15s;
+}
+.config-group textarea:focus { outline: none; border-color: var(--accent); }
+.config-group textarea::placeholder { color: var(--text-dim); }
+.config-group .config-hint { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.2rem; }
 
 /* FIELD BUILDER */
 .field-group-label {
@@ -137,62 +206,6 @@ body {
   border-radius: 4px; width: 100%; font-family: inherit;
 }
 .enum-values input:focus { outline: none; border-color: var(--accent); }
-
-/* PARSER CARDS */
-.parser-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-.parser-card {
-  background: var(--surface); border: 1.5px solid var(--border);
-  border-radius: var(--r-lg); padding: 1.1rem 1.25rem; cursor: pointer;
-  transition: all 0.2s; position: relative;
-}
-.parser-card:hover { border-color: var(--text-dim); }
-.parser-card.selected { border-color: var(--accent); background: var(--accent-dim); }
-.parser-card .parser-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.25rem; }
-.parser-card .parser-desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.45; }
-.parser-badge {
-  position: absolute; top: 0.6rem; right: 0.75rem;
-  font-size: 0.58rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--green); background: rgba(134,239,172,0.1);
-  padding: 0.15rem 0.45rem; border-radius: 3px;
-}
-
-/* CONFIG FORM */
-.config-form { display: flex; flex-direction: column; gap: 1.25rem; }
-.config-group label {
-  display: block; font-size: 0.76rem; color: var(--text-muted);
-  margin-bottom: 0.35rem; font-weight: 500;
-}
-.config-group input[type=number], .config-group input[type=text] {
-  background: var(--surface-2); border: 1px solid var(--border);
-  border-radius: 4px; color: var(--text); padding: 0.35rem 0.5rem;
-  font-size: 0.82rem; font-family: inherit; transition: border-color 0.15s;
-}
-.config-group input:focus { outline: none; border-color: var(--accent); }
-.config-group textarea {
-  width: 100%; min-height: 60px; font-size: 0.82rem;
-  padding: 0.48rem 0.6rem; background: var(--surface-2);
-  border: 1px solid var(--border); border-radius: 4px;
-  font-family: inherit; resize: vertical; color: var(--text);
-  transition: border-color 0.15s;
-}
-.config-group textarea:focus { outline: none; border-color: var(--accent); }
-.config-group textarea::placeholder { color: var(--text-dim); }
-.config-group .config-hint { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.2rem; }
-
-/* SCHEMA PREVIEW */
-.schema-preview {
-  background: var(--surface); border: 1px solid var(--border);
-  padding: 1rem 1.25rem; border-radius: var(--r); overflow-x: auto;
-  font-size: 0.77rem; color: var(--text); line-height: 1.65;
-  margin: 1rem 0; white-space: pre; font-family: 'DM Mono', 'SF Mono', 'Fira Code', monospace;
-}
-.schema-name-input {
-  background: transparent; border: none; color: var(--text);
-  font-size: 0.92rem; padding: 0; font-family: inherit; font-weight: 600;
-  width: 100%; max-width: 320px;
-}
-.schema-name-input:focus { outline: none; }
-.schema-name-input::placeholder { color: var(--text-dim); }
 
 /* RESULTS */
 .table-wrap {
@@ -239,11 +252,6 @@ table.results tr:hover td { background: var(--surface-2); }
 }
 .btn-add:hover { border-color: var(--accent); color: var(--accent); }
 
-.card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 1.5rem 1.75rem; margin-bottom: 1.25rem;
-}
-
 .step-title {
   font-family: 'DM Serif Display', Georgia, serif;
   font-size: 1.35rem; font-weight: 400; margin-bottom: 0.4rem;
@@ -263,7 +271,7 @@ table.results tr:hover td { background: var(--surface-2); }
   border-radius: 6px; cursor: pointer; font-family: inherit;
   letter-spacing: 0.03em; transition: background 0.15s;
 }
-.btn-next:hover { background: var(--accent-h); }
+.btn-next:hover:not(:disabled) { background: var(--accent-h); }
 .btn-next:disabled { background: var(--surface-2); color: var(--text-dim); border: 1px solid var(--border); cursor: not-allowed; }
 .btn-back {
   padding: 0.6rem 1.2rem; font-size: 0.82rem; font-weight: 500;
@@ -272,24 +280,38 @@ table.results tr:hover td { background: var(--surface-2); }
 }
 .btn-back:hover { border-color: var(--text-dim); color: var(--text); }
 
-/* SUMMARY ROW */
-.summary-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1.25rem;
+/* SUGGEST BUTTON */
+@keyframes pulse-fade { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.btn-suggest {
+  padding: 0.38rem 0.9rem; font-size: 0.78rem; font-weight: 500;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--text-muted); border-radius: 5px; cursor: pointer;
+  font-family: inherit; transition: all 0.15s;
 }
-.summary-item {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r); padding: 0.75rem 1rem;
-}
-.summary-item .summary-label {
-  font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 0.25rem;
-}
-.summary-item .summary-value { font-size: 0.88rem; font-weight: 500; }
+.btn-suggest:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn-suggest:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-suggest.analyzing { color: var(--accent); border-color: var(--accent); animation: pulse-fade 1.5s ease-in-out infinite; }
 
+/* STATUS */
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 #status {
   margin: 0.75rem 0; font-size: 0.82rem; color: var(--text-muted);
   white-space: pre-line; line-height: 1.6;
 }
+
+.schema-name-input {
+  background: transparent; border: none; color: var(--text);
+  font-size: 0.92rem; padding: 0; font-family: inherit; font-weight: 600;
+  width: 100%; max-width: 320px;
+}
+.schema-name-input:focus { outline: none; }
+.schema-name-input::placeholder { color: var(--text-dim); }
+
+.settings-link {
+  font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem;
+}
+.settings-link a { color: var(--accent); text-decoration: none; }
+.settings-link a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -310,147 +332,173 @@ table.results tr:hover td { background: var(--surface-2); }
   <div class="step-progress" id="stepProgress"></div>
 
   <!-- ============================================================ -->
-  <!-- STEP 0: Use Case -->
-  <!-- ============================================================ -->
-  <div class="wizard-step visible" id="step-0">
-    <div class="step-title">What are you trying to do?</div>
-    <div class="step-subtitle">Pick the scenario that best describes your extraction task.</div>
-    <div class="case-grid">
-      <div class="case-card" data-case="1">
-        <div class="case-icon">📄</div>
-        <div class="case-title">Get specific info from each document</div>
-        <div class="case-desc">You have a batch of documents and want to pull the same fields (name, date, amount, etc.) from each one. One row of results per file.</div>
+  <!-- DEMO OVERVIEW (shown before entering the walkthrough) -->
+  <div class="wizard-step" id="demo-overview">
+    <div class="step-title">Demo: Extract data from a clinical note</div>
+    <div class="step-subtitle">Walk through the entire extraction process with a sample document.</div>
+
+    <div class="demo-explainer visible" style="display:block;">
+      <div class="demo-label">About this demo</div>
+      We'll extract structured data from a <strong>synthetic emergency department clinical note</strong>.
+      The document is a one-page PDF containing a patient's name, age, complaints, and visit outcome written in clinical prose.
+      <br><br>
+      You'll walk through each step: uploading, choosing a mode, picking tools, defining a schema, and extracting. Each step includes an explanation of <strong>why</strong> we're making each choice.
+      <div class="demo-disclaimer">This document was generated entirely by AI for demonstration purposes. It does not represent a real patient, provider, or medical event. Any resemblance to real persons or events is coincidental.</div>
+    </div>
+
+    <div style="margin-top:1.25rem;">
+      <div class="field-group-label">The document</div>
+      <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:0.75rem; margin-top:0.5rem; text-align:center;">
+        <img src="/static/demo_screenshot.png" alt="Demo clinical note" class="demo-thumb" onclick="openLightbox(this.src)" style="max-width:100%; border-radius:var(--r);">
+        <div style="margin-top:0.5rem;">
+          <a href="/demo/patient_01.pdf" download="patient_01.pdf" style="font-size:0.75rem; color:var(--accent); text-decoration:none;">Download PDF</a>
+        </div>
       </div>
-      <div class="case-card" data-case="2">
-        <div class="case-icon">📊</div>
-        <div class="case-title">Extract a table from each document</div>
-        <div class="case-desc">Each document has a table or list of line items you want to extract. Multiple rows of results per file.</div>
-      </div>
-      <div class="case-card" data-case="3">
-        <div class="case-icon">📋</div>
-        <div class="case-title">Extract a table + cover page info</div>
-        <div class="case-desc">Each document has a table, plus header info on the first page (like a case number or date) that should be attached to every row.</div>
-      </div>
-      <div class="case-card" data-case="4">
-        <div class="case-icon">📜</div>
-        <div class="case-title">One long table across many pages</div>
-        <div class="case-desc">A single document with a table that spans many pages. You want all rows extracted into one dataset.</div>
-      </div>
-      <div class="case-card" data-case="5">
-        <div class="case-icon">🔍</div>
-        <div class="case-title">Get specific info from each page</div>
-        <div class="case-desc">A single document where each page has the same structure, and you want to pull the same fields from every page.</div>
-      </div>
+    </div>
+
+    <div class="wizard-nav" style="margin-top:1.5rem;">
+      <span></span>
+      <button class="btn-next" id="startDemoBtn">Start the walkthrough</button>
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 1: Configure Extraction (was Parser + Config) -->
+  <!-- STEP 1: Upload -->
   <!-- ============================================================ -->
-  <div class="wizard-step" id="step-1">
-    <div class="step-title">Configure extraction</div>
-    <div class="step-subtitle">How should Petey read your PDFs? Pick a parser and fine-tune settings.</div>
-    <div class="parser-grid">
-      <div class="parser-card" data-parser="pymupdf">
-        <div class="parser-name">PyMuPDF</div>
-        <div class="parser-desc">Fast, general-purpose text extraction. Works well for most text-based PDFs.</div>
-      </div>
-      <div class="parser-card" data-parser="pdfplumber">
-        <div class="parser-name">pdfplumber</div>
-        <div class="parser-desc">Better at preserving layout and whitespace. Good for structured documents with columns.</div>
-      </div>
-      <div class="parser-card" data-parser="datalab">
-        <div class="parser-name">Datalab</div>
-        <div class="parser-desc">AI-powered parsing for scanned documents, handwriting, or complex layouts. Requires a Datalab API key.</div>
-      </div>
+  <div class="wizard-step visible" id="step-0">
+    <div class="step-title">Upload your files</div>
+    <div class="step-subtitle">Drop one file, many files, or a whole folder.</div>
+    <div class="demo-explainer" id="demo-step0">
+      <div class="demo-label">Demo walkthrough</div>
+      We've loaded the demo document for you. In a real workflow, you'd drop your own PDFs here. You can also set a <strong>page range</strong> below if you only need specific pages from a larger document.
     </div>
-    <div class="config-form" style="margin-top:1.5rem;">
-      <div class="config-group" id="headerPagesGroup">
-        <label>Header pages</label>
-        <input type="number" id="cfgHeaderPages" value="0" min="0" max="10" style="width:5rem;">
-        <div class="config-hint">Number of leading pages to send alongside every page (for cover page info that should appear on every row).</div>
-      </div>
-      <div class="config-group" id="pageRangeGroup">
+    <script src="/static/dropzone.js"></script>
+    <drop-zone id="dropzone"></drop-zone>
+    <div class="config-form" style="margin-top:1.25rem;">
+      <div class="config-group">
         <label>Page range <span style="color:var(--text-dim); font-weight:400;">(optional)</span></label>
-        <input type="text" id="cfgPageRange" placeholder="e.g. 2-5 or 1,3,5-7" style="width:14rem;">
+        <input type="text" id="cfgPageRange" placeholder="e.g. 5-10 or 1,3,5-7" style="width:14rem;">
         <div class="config-hint">Only process specific pages. Leave blank to process all pages.</div>
       </div>
     </div>
+    <div style="text-align:center; margin-top:1rem;">
+      <span style="font-size:0.78rem; color:var(--text-dim);">or </span>
+      <button id="tryDemoBtn" style="font-size:0.78rem; color:var(--accent); background:none; border:none; cursor:pointer; font-family:inherit; text-decoration:underline;">try a demo</button>
+    </div>
     <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(0)">Back</button>
-      <button class="btn-next" id="parserNext">Next</button>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- STEP 2: Fields (+ instructions) -->
-  <!-- ============================================================ -->
-  <div class="wizard-step" id="step-2">
-    <div class="step-title">Define your fields</div>
-    <div class="step-subtitle" id="fieldsSubtitle">What information do you want to extract? Add a field for each piece of data. Put anything you think would be useful to know in the Description field.</div>
-
-    <div id="headerFieldsSection" style="display:none;">
-      <div class="field-group-label">Cover page fields</div>
-      <div class="step-subtitle" style="margin-bottom:0.75rem; margin-top:0;">These fields come from the first page and will be repeated on every row.</div>
-      <div id="headerFieldRows"></div>
-      <button class="btn-add" id="addHeaderField" style="margin-bottom:1.5rem;">+ Add cover page field</button>
-      <div class="field-group-label">Table fields</div>
-      <div class="step-subtitle" style="margin-bottom:0.75rem; margin-top:0;">These are the columns in the table you want to extract.</div>
-    </div>
-
-    <div id="tableFieldRows"></div>
-    <button class="btn-add" id="addTableField">+ Add field</button>
-
-    <div class="config-form" style="margin-top:1.5rem;">
-      <div class="config-group">
-        <label>Additional instructions <span style="color:var(--text-dim); font-weight:400;">(optional)</span></label>
-        <textarea id="cfgInstructions" placeholder="e.g. Dates should be in MM/DD/YYYY format. Ignore footnotes."></textarea>
-        <div class="config-hint">Extra guidance for the extraction model. Be specific about formatting, edge cases, or what to ignore.</div>
-      </div>
-    </div>
-
-    <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(1)">Back</button>
-      <button class="btn-next" id="fieldsNext">Next</button>
-    </div>
-  </div>
-
-  <!-- ============================================================ -->
-  <!-- STEP 3: Upload -->
-  <!-- ============================================================ -->
-  <div class="wizard-step" id="step-3">
-    <div class="step-title">Upload your files</div>
-    <div class="step-subtitle" id="uploadSubtitle">Drop your PDFs here. You can select a single file, multiple files or a whole folder.</div>
-    <script src="/static/dropzone.js"></script>
-    <drop-zone id="dropzone"></drop-zone>
-    <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(2)">Back</button>
+      <span></span>
       <button class="btn-next" id="uploadNext" disabled>Next</button>
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 4: Review -->
+  <!-- STEP 2: Mode -->
   <!-- ============================================================ -->
-  <div class="wizard-step" id="step-4">
-    <div class="step-title">Review & download schema</div>
-    <div class="step-subtitle">Here's what Petey will extract. Download the schema to reuse it later on the main Extractor page.</div>
+  <div class="wizard-step" id="step-1">
+    <div class="step-title">What kind of extraction?</div>
+    <div class="step-subtitle">How is your data structured?</div>
+    <div class="demo-explainer" id="demo-step1">
+      <div class="demo-label">Demo walkthrough</div>
+      This clinical note contains <strong>one set of data points per document</strong> — a single patient's info. There's no table or list of rows to extract. That makes this a <strong>Query</strong> — we want one row of results per file. If we had a batch of 100 notes, we'd get 100 rows.
+    </div>
+    <div class="mode-grid">
+      <div class="mode-card" data-mode="query">
+        <div class="mode-title">Query</div>
+        <div class="mode-desc">Pull specific data points from each document. One row of results per file.</div>
+      </div>
+      <div class="mode-card" data-mode="table">
+        <div class="mode-title">Table</div>
+        <div class="mode-desc">Extract rows from a table. Multiple rows per file.</div>
+      </div>
+      <div class="mode-card" data-mode="text">
+        <div class="mode-title">Text</div>
+        <div class="mode-desc">Just get the text -- no schema needed.</div>
+      </div>
+    </div>
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goToStep(0)">Back</button>
+      <button class="btn-next" id="modeNext" disabled>Next</button>
+    </div>
+  </div>
 
-    <div class="summary-grid" id="summaryGrid"></div>
-
-    <div style="margin-bottom:0.75rem;">
-      <label style="font-size:0.76rem; color:var(--text-muted); font-weight:500;">Schema name</label>
-      <input type="text" class="schema-name-input" id="schemaName" placeholder="my_extraction_schema" style="display:block; margin-top:0.3rem; border-bottom:1px solid var(--border); padding-bottom:0.3rem;">
+  <!-- ============================================================ -->
+  <!-- STEP 3: Tools -->
+  <!-- ============================================================ -->
+  <div class="wizard-step" id="step-2">
+    <div class="step-title">Pick your tools</div>
+    <div class="step-subtitle">Choose how Petey reads and processes your PDFs.</div>
+    <div class="demo-explainer" id="demo-step2">
+      <div class="demo-label">Demo walkthrough</div>
+      The <strong>parser</strong> reads text from the PDF. Since this is a clean, digital document, <strong>PyMuPDF</strong> is fast and free. For scanned or handwritten documents, use Marker instead.
+      <br><br>
+      The <strong>model</strong> does the actual extraction. This document is simple enough that any model works — even the cheapest ones score 97%+ on documents like this.
     </div>
 
-    <div class="schema-preview" id="schemaPreview"></div>
+    <div class="field-group-label">Parser</div>
+    <div class="parser-grid">
+      <div class="parser-card selected" data-parser="pymupdf">
+        <div class="parser-name">PyMuPDF</div>
+        <div class="parser-desc">Fast, local text extraction. Works for most text-based PDFs.</div>
+      </div>
+      <div class="parser-card" data-parser="marker">
+        <div class="parser-name">Marker</div>
+        <div class="parser-desc">AI-powered OCR for scanned docs, handwriting, or complex layouts. Requires API key.</div>
+      </div>
+      <div class="parser-card" data-parser="unstructured">
+        <div class="parser-name">Unstructured</div>
+        <div class="parser-desc">Alternative AI parser. Requires API key.</div>
+      </div>
+    </div>
 
-    <div style="display:flex; gap:0.75rem; margin-top:0.25rem;">
-      <button class="btn-add" id="downloadSchemaBtn" style="padding:0.45rem 1rem;">Download Schema (.yaml)</button>
+    <div class="config-form" style="margin-top:1.5rem;">
+      <div class="config-group">
+        <label>Model</label>
+        <select id="modelSelect" style="width:18rem;"></select>
+      </div>
+    </div>
+
+    <div class="settings-link">Need to set API keys? <a href="/settings/page">Settings</a></div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goToStep(1)">Back</button>
+      <button class="btn-next" id="toolsNext">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 4: Schema -->
+  <!-- ============================================================ -->
+  <div class="wizard-step" id="step-3">
+    <div class="step-title">Define your schema</div>
+    <div class="step-subtitle" id="schemaSubtitle">Add the data points you want to extract from each document.</div>
+    <div class="demo-explainer" id="demo-step3">
+      <div class="demo-label">Demo walkthrough</div>
+      The schema tells Petey <strong>what to look for</strong>. Each field is a data point you want extracted. A few things to notice:
+      <br><br>
+      <strong>Gender</strong> is a Category field — we give it a fixed set of values (Male, Female, Non-binary) so the model picks from a controlled list instead of making up its own labels.
+      <br><br>
+      <strong>Descriptions matter.</strong> For gender, we say "infer from pronouns if not obvious" — this guides the model when the document doesn't state gender explicitly. For the second complaint, we note it "can be null" so the model knows it's OK to leave it blank.
+      <br><br>
+      You can also click <strong>Suggest fields</strong> to have Petey analyze the document and propose a schema automatically.
+    </div>
+
+    <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem;">
+      <button class="btn-suggest" id="suggestFieldsBtn">Suggest fields</button>
+    </div>
+
+    <div class="field-group-label">Fields</div>
+    <div id="fieldRows"></div>
+    <button class="btn-add" id="addFieldBtn" style="margin-top:0.35rem;">+ Add field</button>
+
+    <div class="config-form" style="margin-top:1.5rem;">
+      <div class="config-group">
+        <label>Schema name</label>
+        <input type="text" class="schema-name-input" id="schemaName" placeholder="my_extraction_schema" style="display:block; margin-top:0.3rem; border-bottom:1px solid var(--border); padding-bottom:0.3rem;">
+      </div>
     </div>
 
     <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(3)">Back</button>
+      <button class="btn-back" onclick="goToStep(2)">Back</button>
       <button class="btn-next" id="extractBtn">Extract</button>
     </div>
   </div>
@@ -458,9 +506,13 @@ table.results tr:hover td { background: var(--surface-2); }
   <!-- ============================================================ -->
   <!-- STEP 5: Results -->
   <!-- ============================================================ -->
-  <div class="wizard-step" id="step-5">
-    <div class="step-title">Results</div>
-    <div class="step-subtitle" id="resultsSubtitle">Extraction in progress...</div>
+  <div class="wizard-step" id="step-4">
+    <div class="step-title" id="resultsTitle">Extracting...</div>
+    <div class="step-subtitle" id="resultsSubtitle">Working on your files.</div>
+    <div class="demo-explainer" id="demo-step4">
+      <div class="demo-label">Demo walkthrough</div>
+      That's it! Petey parsed the PDF, sent the text to the model with your schema, and returned structured data. You can <strong>download the results</strong> as CSV or JSON, and <strong>download the schema</strong> to reuse it on the main Extractor page with a whole batch of files.
+    </div>
 
     <div id="streamProgress" style="display:none;">
       <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-muted); margin-bottom:0.25rem;">
@@ -477,9 +529,7 @@ table.results tr:hover td { background: var(--surface-2); }
     <div id="status"></div>
     <div id="results"></div>
 
-    <div id="resultsSchemaDownload" style="display:none; gap:0.75rem; margin-top:1rem;">
-      <button class="btn-add" id="downloadSchemaBtnResults" style="padding:0.45rem 1rem;">Download Schema (.yaml)</button>
-    </div>
+    <div id="resultsDownloads" style="display:none; gap:0.75rem; margin-top:1rem; flex-wrap:wrap;"></div>
 
     <div class="wizard-nav" id="resultsNav" style="display:none;">
       <button class="btn-back" onclick="startOver()">Start over</button>
@@ -522,47 +572,84 @@ async function authFetch(url, opts = {}) {
 }
 
 // --- Wizard state ---
-const STEPS = ['Use case', 'Config', 'Fields', 'Upload', 'Review', 'Results'];
+const STEPS = ['Upload', 'Mode', 'Tools', 'Schema', 'Results'];
+
+window.openLightbox = function(src) {
+  const lb = document.createElement('div');
+  lb.className = 'lightbox';
+  lb.innerHTML = '<img src="' + src + '">';
+  lb.addEventListener('click', () => lb.remove());
+  document.body.appendChild(lb);
+}
 let currentStep = 0;
 
 const W = {
-  useCase: null,
-  mode: 'query',
-  singleDoc: false,
-  headerFields: [],
-  tableFields: [],
+  mode: null,         // 'query' | 'table' | 'text'
   parser: 'pymupdf',
-  headerPages: 0,
-  pageRange: '',
+  model: '',
+  fields: [],
   instructions: '',
-  files: [],
+  pageRange: '',
   schemaName: '',
+  files: [],
 };
 
-// Use case defaults
-const CASE_DEFAULTS = {
-  1: { mode: 'query',  singleDoc: false, parser: 'pymupdf',  headerPages: 0 },
-  2: { mode: 'table',  singleDoc: false, parser: 'pymupdf',  headerPages: 0 },
-  3: { mode: 'table',  singleDoc: false, parser: 'pymupdf',  headerPages: 1 },
-  4: { mode: 'table',  singleDoc: true,  parser: 'pymupdf',  headerPages: 0 },
-  5: { mode: 'table',  singleDoc: true,  parser: 'pymupdf',  headerPages: 0 },
-};
+// --- Models from settings ---
+let _models = [];
+let _hasOpenaiKey = false;
+let _hasAnthropicKey = false;
+
+async function loadSettings() {
+  try {
+    const resp = await authFetch('/settings');
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const hasKey = k => k && k.length > 0;
+    _hasOpenaiKey = hasKey(data.openai_api_key);
+    _hasAnthropicKey = hasKey(data.anthropic_api_key);
+    _models = data.models || [];
+
+    const sel = document.getElementById('modelSelect');
+    sel.innerHTML = '';
+    for (const m of _models) {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name;
+      if (m.default) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    if (_models.length) W.model = sel.value;
+  } catch (_) {}
+}
+
+// Load settings once auth settles (or immediately if auth disabled)
+setTimeout(loadSettings, 300);
 
 // --- Step progress indicator ---
 function renderProgress() {
   const el = document.getElementById('stepProgress');
   let html = '';
-  STEPS.forEach((label, i) => {
-    const cls = i < currentStep ? 'done' : i === currentStep ? 'active' : '';
+  const labels = W.mode === 'text' ? ['Upload', 'Mode', 'Tools', 'Results'] : STEPS;
+  // Map visual indices to actual step indices
+  const stepMap = W.mode === 'text' ? [0, 1, 2, 4] : [0, 1, 2, 3, 4];
+  const visualIdx = stepMap.indexOf(currentStep);
+
+  labels.forEach((label, i) => {
+    const cls = i < visualIdx ? 'done' : i === visualIdx ? 'active' : '';
+    const clickable = i <= visualIdx;
+    const targetStep = stepMap[i];
     html += '<div class="step-col">';
-    html += '<div class="step-dot ' + cls + '">' + (i < currentStep ? '✓' : (i + 1)) + '</div>';
-    html += '<div class="step-label ' + cls + '">' + label + '</div>';
+    html += '<div class="step-dot ' + cls + '"' + (clickable ? ' style="cursor:pointer;" data-goto="' + targetStep + '"' : '') + '>' + (i < visualIdx ? '&#10003;' : (i + 1)) + '</div>';
+    html += '<div class="step-label ' + cls + '"' + (clickable ? ' style="cursor:pointer;" data-goto="' + targetStep + '"' : '') + '>' + label + '</div>';
     html += '</div>';
-    if (i < STEPS.length - 1) {
-      html += '<div class="step-line' + (i < currentStep ? ' done' : '') + '"></div>';
+    if (i < labels.length - 1) {
+      html += '<div class="step-line' + (i < visualIdx ? ' done' : '') + '"></div>';
     }
   });
   el.innerHTML = html;
+  el.querySelectorAll('[data-goto]').forEach(dot => {
+    dot.addEventListener('click', () => goToStep(parseInt(dot.dataset.goto)));
+  });
 }
 
 // --- Step navigation ---
@@ -575,114 +662,201 @@ window.goToStep = function(n) {
 };
 
 window.startOver = function() {
-  W.useCase = null;
-  W.headerFields = [];
-  W.tableFields = [{ name: '', type: 'string', description: '', values: '' }];
+  _demoMode = false;
+  showDemoExplainers(false);
+  W.mode = null;
+  W.fields = [{ name: '', type: 'string', description: '', values: '' }];
   W.files = [];
+  W.parser = 'pymupdf';
+  W.instructions = '';
+  W.pageRange = '';
+  W.schemaName = '';
   document.getElementById('dropzone').reset();
-  document.querySelectorAll('.case-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
   document.querySelectorAll('.parser-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector('[data-parser="pymupdf"]').classList.add('selected');
   document.getElementById('results').innerHTML = '';
   document.getElementById('status').textContent = '';
   document.getElementById('streamProgress').style.display = 'none';
   document.getElementById('resultsNav').style.display = 'none';
+  document.getElementById('resultsDownloads').style.display = 'none';
+  document.getElementById('resultsTitle').textContent = 'Extracting...';
+  document.getElementById('resultsSubtitle').textContent = 'Working on your files.';
+  document.getElementById('cfgPageRange').value = '';
+  document.getElementById('schemaName').value = '';
+  document.getElementById('uploadNext').disabled = true;
+  document.getElementById('modeNext').disabled = true;
   goToStep(0);
 };
 
 renderProgress();
 
-// --- Step 0: Use case cards ---
-document.querySelectorAll('.case-card').forEach(card => {
-  card.addEventListener('click', () => {
-    const c = parseInt(card.dataset.case);
-    W.useCase = c;
-    const defaults = CASE_DEFAULTS[c];
-    Object.assign(W, defaults);
+// --- Demo mode ---
+let _demoMode = false;
 
-    document.querySelectorAll('.case-card').forEach(el => el.classList.remove('selected'));
+function showDemoExplainers(show) {
+  document.querySelectorAll('.demo-explainer').forEach(el => {
+    el.classList.toggle('visible', show);
+  });
+}
+
+document.getElementById('tryDemoBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('tryDemoBtn');
+  btn.textContent = 'Loading demo...';
+  btn.disabled = true;
+  try {
+    const resp = await fetch('/demo/patient_01.pdf');
+    const blob = await resp.blob();
+    const file = new File([blob], 'patient_01.pdf', { type: 'application/pdf' });
+    W.files = [file];
+    // Update dropzone to show the file
+    const dz = document.getElementById('dropzone');
+    dz._setFiles([file]);
+    W.mode = 'query';
+    W.parser = 'pymupdf';
+    W.model = 'gpt-4.1-mini';
+    W.schemaName = 'ed_clinical_note';
+    W.fields = [
+      { name: 'name', type: 'string', description: 'Patient name', values: '' },
+      { name: 'age', type: 'string', description: 'Patient age', values: '' },
+      { name: 'gender', type: 'enum', description: 'Infer from pronouns if not obvious', values: 'Male, Female, Non-binary' },
+      { name: 'presenting_complaint_1', type: 'string', description: 'Primary complaint', values: '' },
+      { name: 'presenting_complaint_2', type: 'string', description: 'Secondary complaint (can be null)', values: '' },
+      { name: 'visit_outcome', type: 'string', description: 'Outcome of the visit', values: '' },
+    ];
+    // Update UI to reflect selections
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector('[data-mode="query"]')?.classList.add('selected');
+    document.querySelectorAll('.parser-card').forEach(c => c.classList.remove('selected'));
+    document.querySelector('[data-parser="pymupdf"]')?.classList.add('selected');
+    document.getElementById('schemaName').value = W.schemaName;
+    const modelSel = document.getElementById('modelSelect');
+    if (modelSel) { modelSel.value = 'gpt-4.1-mini'; }
+    document.getElementById('uploadNext').disabled = false;
+    document.getElementById('modeNext').disabled = false;
+    renderFields();
+    _demoMode = true;
+    showDemoExplainers(true);
+    // Show overview
+    document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('visible'));
+    document.getElementById('demo-overview').classList.add('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (e) {
+    alert('Failed to load demo: ' + e.message);
+  } finally {
+    btn.textContent = 'try a demo';
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('startDemoBtn').addEventListener('click', () => {
+  goToStep(0);
+});
+
+// Auto-launch demo if ?demo=1 in URL
+if (new URLSearchParams(window.location.search).get('demo') === '1') {
+  setTimeout(() => document.getElementById('tryDemoBtn').click(), 500);
+}
+
+// --- Step 1: Upload ---
+document.getElementById('dropzone').addEventListener('files-selected', e => {
+  W.files = e.detail.files;
+  document.getElementById('uploadNext').disabled = !W.files.length;
+});
+
+document.getElementById('uploadNext').addEventListener('click', () => {
+  if (W.files.length) goToStep(1);
+});
+
+// --- Step 2: Mode cards (auto-advance on click) ---
+document.querySelectorAll('.mode-card').forEach(card => {
+  card.addEventListener('click', () => {
+    W.mode = card.dataset.mode;
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
 
-    // Set up field sections based on case
-    if (c === 3) {
-      document.getElementById('headerFieldsSection').style.display = '';
-      document.getElementById('fieldsSubtitle').textContent = 'Define the cover page fields and table columns separately.';
-      if (!W.headerFields.length) W.headerFields = [{ name: '', type: 'string', description: '', values: '' }];
-    } else {
-      document.getElementById('headerFieldsSection').style.display = 'none';
-      document.getElementById('fieldsSubtitle').textContent = 'What information do you want to extract? Add a field for each piece of data. Put anything you think would be useful to know in the Description field.';
+    // Update schema subtitle based on mode
+    if (W.mode === 'query') {
+      document.getElementById('schemaSubtitle').textContent = 'Add the data points you want to extract from each document.';
+    } else if (W.mode === 'table') {
+      document.getElementById('schemaSubtitle').textContent = 'Add the columns you want to extract from each table.';
     }
 
-    // Show header pages only for table modes
-    document.getElementById('headerPagesGroup').style.display = W.mode === 'table' ? '' : 'none';
-    if (!W.tableFields.length) W.tableFields = [{ name: '', type: 'string', description: '', values: '' }];
-
-    // Set up upload hints
-    if (W.singleDoc) {
-      document.getElementById('uploadSubtitle').textContent = 'Drop your PDF here.';
-      document.getElementById('dropzone').setAttribute('max-files', '1');
-    } else {
-      document.getElementById('uploadSubtitle').textContent = 'Drop your PDFs here. You can select a single file, multiple files or a whole folder.';
-      document.getElementById('dropzone').setAttribute('max-files', '5000');
-    }
-
-    // Pre-select parser
-    document.querySelectorAll('.parser-card').forEach(p => {
-      p.classList.toggle('selected', p.dataset.parser === W.parser);
-    });
-    updateParserBadges();
-
-    // Pre-fill config
-    document.getElementById('cfgHeaderPages').value = W.headerPages;
-
-    goToStep(1);
-    renderFields();
+    document.getElementById('modeNext').disabled = false;
   });
 });
 
-// --- Step 2: Field builder ---
+// --- Step 3: Tools (parser + model) ---
+document.querySelectorAll('.parser-card').forEach(card => {
+  card.addEventListener('click', () => {
+    W.parser = card.dataset.parser;
+    document.querySelectorAll('.parser-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  });
+});
+
+document.getElementById('modelSelect').addEventListener('change', e => {
+  W.model = e.target.value;
+});
+
+document.getElementById('modeNext').addEventListener('click', () => {
+  if (W.mode) goToStep(2);
+});
+
+document.getElementById('toolsNext').addEventListener('click', () => {
+  W.model = document.getElementById('modelSelect').value;
+  if (W.mode === 'text') {
+    // Skip schema step, go straight to results/extract
+    runExtraction();
+  } else {
+    if (!W.fields.length) W.fields = [{ name: '', type: 'string', description: '', values: '' }];
+    renderFields();
+    goToStep(3);
+  }
+});
+
+// --- Step 4: Schema / Field builder ---
 function esc(s) { return (s||'').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 
 let _dragIdx = null;
-let _dragGroup = null;
 
-function renderFieldRows(container, fieldsArr, group) {
+function renderFieldRows(container, fieldsArr) {
   container.innerHTML = '';
   fieldsArr.forEach((f, i) => {
     const row = document.createElement('div');
     row.className = 'field-row';
     row.draggable = true;
     row.dataset.idx = i;
-    row.dataset.group = group;
     row.innerHTML =
-      '<span class="drag-handle" title="Drag to reorder">⠿</span>' +
-      '<input type="text" placeholder="Field name" value="' + esc(f.name) + '" data-i="' + i + '" data-key="name" data-group="' + group + '">' +
-      '<select data-i="' + i + '" data-key="type" data-group="' + group + '">' +
+      '<span class="drag-handle" title="Drag to reorder">&#10495;</span>' +
+      '<input type="text" placeholder="Field name" value="' + esc(f.name) + '" data-i="' + i + '" data-key="name">' +
+      '<select data-i="' + i + '" data-key="type">' +
         '<option value="string"' + (f.type==='string'?' selected':'') + '>Text</option>' +
         '<option value="number"' + (f.type==='number'?' selected':'') + '>Number</option>' +
         '<option value="date"' + (f.type==='date'?' selected':'') + '>Date</option>' +
         '<option value="enum"' + (f.type==='enum'?' selected':'') + '>Category</option>' +
       '</select>' +
-      '<textarea placeholder="Description (optional)" rows="1" data-i="' + i + '" data-key="description" data-group="' + group + '">' + esc(f.description) + '</textarea>' +
-      '<button class="remove-btn" data-i="' + i + '" data-group="' + group + '">&times;</button>';
+      '<textarea placeholder="Description (optional)" rows="1" data-i="' + i + '" data-key="description">' + esc(f.description) + '</textarea>' +
+      '<button class="remove-btn" data-i="' + i + '">&times;</button>';
 
     row.addEventListener('dragstart', e => {
-      _dragIdx = i; _dragGroup = group;
+      _dragIdx = i;
       row.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
     });
     row.addEventListener('dragend', () => {
       row.classList.remove('dragging');
       container.querySelectorAll('.field-row').forEach(r => r.classList.remove('drag-over'));
-      _dragIdx = null; _dragGroup = null;
+      _dragIdx = null;
     });
     row.addEventListener('dragover', e => {
       e.preventDefault(); e.dataTransfer.dropEffect = 'move';
-      if (_dragGroup === group) row.classList.add('drag-over');
+      row.classList.add('drag-over');
     });
     row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
     row.addEventListener('drop', e => {
       e.preventDefault(); row.classList.remove('drag-over');
-      if (_dragGroup !== group || _dragIdx === null) return;
+      if (_dragIdx === null) return;
       const from = _dragIdx, to = parseInt(row.dataset.idx);
       if (from !== to) {
         const [moved] = fieldsArr.splice(from, 1);
@@ -696,8 +870,8 @@ function renderFieldRows(container, fieldsArr, group) {
     if (f.type === 'enum') {
       const ev = document.createElement('div');
       ev.className = 'enum-values';
-      ev.innerHTML = '<label>Values (comma-separated, leave blank to infer):</label>' +
-        '<input type="text" placeholder="Option A, Option B, ..." value="' + esc(f.values) + '" data-i="' + i + '" data-key="values" data-group="' + group + '">';
+      ev.innerHTML = '<label>Values (comma-separated):</label>' +
+        '<input type="text" placeholder="Option A, Option B, ..." value="' + esc(f.values) + '" data-i="' + i + '" data-key="values">';
       container.appendChild(ev);
     }
   });
@@ -705,11 +879,9 @@ function renderFieldRows(container, fieldsArr, group) {
   container.querySelectorAll('input, select, textarea').forEach(el => {
     const handler = e => {
       const idx = parseInt(e.target.dataset.i);
-      const g = e.target.dataset.group;
-      const arr = g === 'header' ? W.headerFields : W.tableFields;
-      arr[idx][e.target.dataset.key] = e.target.value;
+      W.fields[idx][e.target.dataset.key] = e.target.value;
       if (e.target.dataset.key === 'type') renderFields();
-      updateFieldsNext();
+      updateExtractBtn();
     };
     el.addEventListener('input', handler);
     el.addEventListener('change', handler);
@@ -724,103 +896,87 @@ function renderFieldRows(container, fieldsArr, group) {
 
   container.querySelectorAll('.remove-btn').forEach(el => {
     el.addEventListener('click', e => {
-      const g = e.currentTarget.dataset.group;
-      const arr = g === 'header' ? W.headerFields : W.tableFields;
-      arr.splice(parseInt(e.currentTarget.dataset.i), 1);
+      W.fields.splice(parseInt(e.currentTarget.dataset.i), 1);
       renderFields();
-      updateFieldsNext();
+      updateExtractBtn();
     });
   });
 }
 
 function renderFields() {
-  if (W.useCase === 3) {
-    renderFieldRows(document.getElementById('headerFieldRows'), W.headerFields, 'header');
-  }
-  renderFieldRows(document.getElementById('tableFieldRows'), W.tableFields, 'table');
-  updateFieldsNext();
+  renderFieldRows(document.getElementById('fieldRows'), W.fields);
+  updateExtractBtn();
 }
 
-function updateFieldsNext() {
-  const hasTableField = W.tableFields.some(f => f.name.trim());
-  const needsHeader = W.useCase === 3;
-  const hasHeaderField = !needsHeader || W.headerFields.some(f => f.name.trim());
-  document.getElementById('fieldsNext').disabled = !(hasTableField && hasHeaderField);
+function updateExtractBtn() {
+  const hasField = W.fields.some(f => f.name.trim());
+  document.getElementById('extractBtn').disabled = !hasField;
 }
 
-document.getElementById('addTableField').addEventListener('click', () => {
-  W.tableFields.push({ name: '', type: 'string', description: '', values: '' });
+document.getElementById('addFieldBtn').addEventListener('click', () => {
+  W.fields.push({ name: '', type: 'string', description: '', values: '' });
   renderFields();
-  const inputs = document.getElementById('tableFieldRows').querySelectorAll('input[data-key="name"]');
+  const inputs = document.getElementById('fieldRows').querySelectorAll('input[data-key="name"]');
   if (inputs.length) inputs[inputs.length - 1].focus();
 });
 
-document.getElementById('addHeaderField').addEventListener('click', () => {
-  W.headerFields.push({ name: '', type: 'string', description: '', values: '' });
-  renderFields();
-  const inputs = document.getElementById('headerFieldRows').querySelectorAll('input[data-key="name"]');
-  if (inputs.length) inputs[inputs.length - 1].focus();
-});
-
-document.getElementById('fieldsNext').addEventListener('click', () => {
-  if (!document.getElementById('fieldsNext').disabled) goToStep(3);
-});
-
-// --- Step 1: Parser ---
-function updateParserBadges() {
-  const rec = CASE_DEFAULTS[W.useCase]?.parser;
-  document.querySelectorAll('.parser-card').forEach(card => {
-    const existing = card.querySelector('.parser-badge');
-    if (existing) existing.remove();
-    if (card.dataset.parser === rec) {
-      const badge = document.createElement('div');
-      badge.className = 'parser-badge';
-      badge.textContent = 'Recommended';
-      card.appendChild(badge);
+// --- Suggest fields ---
+document.getElementById('suggestFieldsBtn').addEventListener('click', async () => {
+  if (!W.files.length) return;
+  const btn = document.getElementById('suggestFieldsBtn');
+  const origText = btn.textContent;
+  btn.textContent = 'Analyzing...';
+  btn.classList.add('analyzing');
+  btn.disabled = true;
+  try {
+    const form = new FormData();
+    form.append('file', W.files[0]);
+    const model = document.getElementById('modelSelect').value;
+    if (model && model !== 'none') form.append('model', model);
+    const pr = document.getElementById('cfgPageRange').value.trim();
+    if (pr) form.append('page_range', pr);
+    const resp = await authFetch('/infer-schema/vision', { method: 'POST', body: form });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || 'Schema inference failed');
     }
-  });
-}
-
-document.querySelectorAll('.parser-card').forEach(card => {
-  card.addEventListener('click', () => {
-    W.parser = card.dataset.parser;
-    document.querySelectorAll('.parser-card').forEach(c => c.classList.remove('selected'));
-    card.classList.add('selected');
-  });
-});
-
-document.getElementById('parserNext').addEventListener('click', () => {
-  goToStep(2);
-});
-
-// --- Step 3: Upload ---
-document.getElementById('dropzone').addEventListener('files-selected', e => {
-  W.files = e.detail.files;
-  document.getElementById('uploadNext').disabled = !W.files.length;
-});
-
-document.getElementById('uploadNext').addEventListener('click', () => {
-  if (W.files.length) {
-    W.headerPages = parseInt(document.getElementById('cfgHeaderPages').value) || 0;
-    W.pageRange = document.getElementById('cfgPageRange').value.trim();
-    W.instructions = document.getElementById('cfgInstructions').value.trim();
-    buildReviewStep();
-    goToStep(4);
+    const spec = await resp.json();
+    if (spec.name) document.getElementById('schemaName').value = spec.name;
+    if (spec.mode === 'table' && W.mode !== 'table') {
+      // Keep user's chosen mode
+    }
+    W.fields = Object.entries(spec.fields || {}).map(([name, cfg]) => ({
+      name, type: cfg.type || 'string', description: cfg.description || '',
+      values: (cfg.values || []).join(', '),
+    }));
+    renderFields();
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.textContent = origText;
+    btn.classList.remove('analyzing');
+    btn.disabled = false;
   }
 });
 
-// --- Step 4: Review ---
+// --- Extract button (step 4) ---
+document.getElementById('extractBtn').addEventListener('click', () => {
+  if (document.getElementById('extractBtn').disabled) return;
+  W.pageRange = document.getElementById('cfgPageRange').value.trim();
+  W.schemaName = document.getElementById('schemaName').value.trim();
+  runExtraction();
+});
+
+// --- Build schema spec ---
 function buildSpec() {
   const spec = {};
   const name = W.schemaName || 'guide_schema';
   spec.name = name;
   if (W.mode === 'table') spec.mode = 'table';
-  if (W.headerPages > 0) spec.header_pages = W.headerPages;
   if (W.pageRange) spec.pages = W.pageRange;
-  if (W.instructions) spec.instructions = W.instructions;
   spec.fields = {};
-  const allFields = [...W.headerFields.filter(f => f.name.trim()), ...W.tableFields.filter(f => f.name.trim())];
-  for (const f of allFields) {
+  const validFields = W.fields.filter(f => f.name.trim());
+  for (const f of validFields) {
     const cfg = { type: f.type, description: f.description };
     if (f.type === 'enum') {
       const vals = f.values.split(',').map(v => v.trim()).filter(Boolean);
@@ -840,7 +996,6 @@ function specToYaml(spec) {
   let y = '';
   if (spec.name) y += 'name: ' + yamlStr(spec.name.replace(/\.ya?ml$/i, '')) + '\n';
   if (spec.mode) y += 'mode: ' + spec.mode + '\n';
-  if (spec.header_pages) y += 'header_pages: ' + spec.header_pages + '\n';
   if (spec.pages) y += 'pages: ' + yamlStr(spec.pages) + '\n';
   if (spec.instructions) y += 'instructions: ' + yamlStr(spec.instructions) + '\n';
   y += '\nfields:\n';
@@ -854,45 +1009,7 @@ function specToYaml(spec) {
   return y.trimEnd() + '\n';
 }
 
-const CASE_LABELS = {
-  1: 'Query (one row per document)',
-  2: 'Table (rows from each document)',
-  3: 'Table + cover page info',
-  4: 'Table (single long document)',
-  5: 'Per-page extraction',
-};
-
-function buildReviewStep() {
-  W.schemaName = document.getElementById('schemaName').value || '';
-  const spec = buildSpec();
-  const fieldCount = Object.keys(spec.fields).length;
-
-  const grid = document.getElementById('summaryGrid');
-  grid.innerHTML =
-    '<div class="summary-item"><div class="summary-label">Use Case</div><div class="summary-value">' + CASE_LABELS[W.useCase] + '</div></div>' +
-    '<div class="summary-item"><div class="summary-label">Parser</div><div class="summary-value">' + W.parser + '</div></div>' +
-    '<div class="summary-item"><div class="summary-label">Fields</div><div class="summary-value">' + fieldCount + ' field' + (fieldCount !== 1 ? 's' : '') + '</div></div>' +
-    '<div class="summary-item"><div class="summary-label">Files</div><div class="summary-value">' + W.files.length + ' PDF' + (W.files.length !== 1 ? 's' : '') + '</div></div>';
-
-  document.getElementById('schemaPreview').textContent = specToYaml(spec);
-}
-
-document.getElementById('schemaName').addEventListener('input', () => {
-  W.schemaName = document.getElementById('schemaName').value;
-  const spec = buildSpec();
-  document.getElementById('schemaPreview').textContent = specToYaml(spec);
-});
-
-function downloadSchema() {
-  const spec = buildSpec();
-  const yaml = specToYaml(spec);
-  const filename = (spec.name || 'schema').toLowerCase().replace(/\s+/g, '_') + '.yaml';
-  triggerDownload(new Blob([yaml], { type: 'text/yaml' }), filename);
-}
-document.getElementById('downloadSchemaBtn').addEventListener('click', downloadSchema);
-document.getElementById('downloadSchemaBtnResults').addEventListener('click', downloadSchema);
-
-// --- Step 5: Extraction ---
+// --- Extraction ---
 class ApiKeyError extends Error {
   constructor(msg) { super(msg); this.name = 'ApiKeyError'; }
 }
@@ -900,9 +1017,11 @@ class ApiKeyError extends Error {
 async function extractFile(file, spec, instr) {
   const form = new FormData();
   form.append('file', file);
-  form.append('schema_spec', JSON.stringify(spec));
+  form.append('mode', W.mode || 'query');
+  if (W.mode !== 'text') form.append('schema_spec', JSON.stringify(spec));
   if (instr) form.append('instructions', instr);
   form.append('parser', W.parser);
+  form.append('model', W.model);
   const resp = await authFetch('/extract', { method: 'POST', body: form });
   if (!resp.ok) {
     let msg = 'Extraction failed (status ' + resp.status + ')';
@@ -921,6 +1040,8 @@ async function extractFileStream(file, spec, instr, onEvent) {
   form.append('file', file);
   form.append('schema_spec', JSON.stringify(spec));
   if (instr) form.append('instructions', instr);
+  form.append('parser', W.parser);
+  form.append('model', W.model);
   const resp = await authFetch('/extract/stream', { method: 'POST', body: form, signal: _streamAbort.signal });
   if (!resp.ok) {
     let msg = 'Extraction failed (status ' + resp.status + ')';
@@ -956,23 +1077,118 @@ async function getConcurrency() {
   return 10;
 }
 
-document.getElementById('extractBtn').addEventListener('click', async () => {
-  if (!W.files.length) return;
-  const spec = buildSpec();
-  if (!Object.keys(spec.fields).length) return;
+const DEMO_RESULT = {
+  name: 'Margaret Ellison',
+  age: '34',
+  gender: 'Female',
+  presenting_complaint_1: 'shortness of breath',
+  presenting_complaint_2: 'chest tightness',
+  visit_outcome: 'discharged with salbutamol inhaler',
+};
 
-  goToStep(5);
+async function _sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runDemoExtraction() {
+  goToStep(4);
+  document.getElementById('demo-step4').classList.remove('visible');
+
+  const st = document.getElementById('status');
+  const resultsEl = document.getElementById('results');
+  const sp = document.getElementById('streamProgress');
+  resultsEl.innerHTML = '';
+  st.textContent = 'patient_01.pdf — parsing...';
+  sp.style.display = '';
+
+  // Simulate parsing
+  document.getElementById('parsePct').textContent = '0 / 1';
+  document.getElementById('parseBar').style.width = '0%';
+  document.getElementById('extractPct').textContent = '0 / 1';
+  document.getElementById('extractBar').style.width = '0%';
+
+  await _sleep(1200);
+  document.getElementById('parsePct').textContent = '1 / 1';
+  document.getElementById('parseBar').style.width = '100%';
+  st.textContent = 'patient_01.pdf — extracting p1...';
+
+  // Simulate extraction
+  await _sleep(2500);
+  document.getElementById('extractPct').textContent = '1 / 1';
+  document.getElementById('extractBar').style.width = '100%';
+  st.textContent = 'patient_01.pdf — done';
+
+  await _sleep(500);
+  sp.style.display = 'none';
+
+  // Show results
+  document.getElementById('resultsTitle').textContent = 'Results';
+  document.getElementById('resultsSubtitle').textContent = 'Done — 1 file processed.';
+  if (_demoMode) document.getElementById('demo-step4').classList.add('visible');
+
+  // Show doc + result side by side
+  let html = '<div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; align-items:start; margin-bottom:1.25rem;">';
+  html += '<div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:0.75rem;">';
+  html += '<div style="font-size:0.67rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.5rem;">Document</div>';
+  html += '<img src="/static/demo_screenshot.png" alt="Demo document" class="demo-thumb" onclick="openLightbox(this.src)" style="max-width:100%; border-radius:var(--r);">';
+  html += '</div>';
+  html += '<div>';
+
+  // Render result as vertical key-value table
+  const keys = Object.keys(DEMO_RESULT);
+  html += '<div style="font-size:0.67rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.5rem;">Extracted data</div>';
+  html += '<table style="width:100%; font-size:0.82rem; border-collapse:collapse;">';
+  for (const k of keys) {
+    html += '<tr>';
+    html += '<td style="padding:0.4rem 0.6rem; border-bottom:1px solid var(--border); color:var(--text-muted); font-weight:500; white-space:nowrap; width:1%;">' + k + '</td>';
+    html += '<td style="padding:0.4rem 0.6rem; border-bottom:1px solid var(--border);">' + (DEMO_RESULT[k] || '<span style="color:var(--text-dim);">null</span>') + '</td>';
+    html += '</tr>';
+  }
+  html += '</table>';
+
+  // Download buttons
+  const csvRows = [keys.join(','), keys.map(k => DEMO_RESULT[k]).join(',')];
+  const csvBlob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const csvUrl = URL.createObjectURL(csvBlob);
+  html += '<div style="display:flex; gap:0.75rem; margin-top:0.75rem;">';
+  html += '<a class="btn-add" href="' + csvUrl + '" download="demo_results.csv" style="text-decoration:none; text-align:center; font-size:0.75rem;">Download CSV</a>';
+
+  const jsonBlob = new Blob([JSON.stringify(DEMO_RESULT, null, 2)], { type: 'application/json' });
+  const jsonUrl = URL.createObjectURL(jsonBlob);
+  html += '<a class="btn-add" href="' + jsonUrl + '" download="demo_results.json" style="text-decoration:none; text-align:center; font-size:0.75rem;">Download JSON</a>';
+
+  const schemaYaml = 'name: ' + W.schemaName + '\n\nfields:\n' + W.fields.map(f => {
+    let s = '  ' + f.name + ':\n    type: ' + f.type;
+    if (f.description) s += '\n    description: ' + f.description;
+    if (f.type === 'enum' && f.values) s += '\n    values: [' + f.values + ']';
+    return s;
+  }).join('\n');
+  const schemaBlob = new Blob([schemaYaml], { type: 'text/yaml' });
+  const schemaUrl = URL.createObjectURL(schemaBlob);
+  html += '<a class="btn-add" href="' + schemaUrl + '" download="' + (W.schemaName || 'schema') + '.yaml" style="text-decoration:none; text-align:center; font-size:0.75rem;">Download Schema</a>';
+
+  html += '</div>';
+  html += '</div></div>'; // close right column + grid
+
+  resultsEl.innerHTML = html;
+  document.getElementById('resultsNav').style.display = '';
+}
+
+async function runExtraction() {
+  if (_demoMode) return runDemoExtraction();
+
+  goToStep(4);
+  document.getElementById('demo-step4').classList.remove('visible');
+
+  const spec = W.mode !== 'text' ? buildSpec() : { name: 'text_extraction' };
+  const total = W.files.length;
+  const instr = '';
+  const warnings = [];
+  const allRecords = [];
+  const allResults = [];
 
   const st = document.getElementById('status');
   const resultsEl = document.getElementById('results');
   resultsEl.innerHTML = '';
   st.textContent = '';
-
-  const total = W.files.length;
-  const instr = W.instructions;
-  const warnings = [];
-  const allRecords = [];
-  const allResults = [];
 
   const sp = document.getElementById('streamProgress');
   const useStream = W.mode === 'table' && total === 1;
@@ -1020,10 +1236,10 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
       sent++;
       updateBars();
       const logEntry = document.createElement('div');
-      logEntry.textContent = file.name + ' — extracting...';
+      logEntry.textContent = file.name + ' -- extracting...';
       progressLog.appendChild(logEntry);
       progressLog.scrollTop = progressLog.scrollHeight;
-      st.textContent = file.name + ' — extracting...';
+      st.textContent = file.name + ' -- extracting...';
       try {
         let data;
         if (useStream) {
@@ -1032,17 +1248,17 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
               spicyParsed++;
               if (spicyParsed === 1 && !cachedPageCount) { cachedPageCount = evt.total; totalLabel = String(evt.total); }
               updateBars();
-              st.textContent = file.name + ' — parsing page ' + evt.page;
+              st.textContent = file.name + ' -- parsing page ' + evt.page;
             } else if (evt.type === 'extract') {
               spicyExtracted++;
               updateBars();
-              st.textContent = file.name + ' — extracting page ' + evt.page;
+              st.textContent = file.name + ' -- extracting page ' + evt.page;
             }
           });
         } else {
           data = await extractFile(file, spec, instr);
         }
-        logEntry.textContent = file.name + (data._error ? ' — error' : ' — done');
+        logEntry.textContent = file.name + (data._error ? ' -- error' : ' -- done');
         if (data._warning) warnings.push(file.name + ': ' + data._warning);
         if (data._error) { warnings.push(file.name + ': ' + data._error); return; }
         if (data.records && Array.isArray(data.records)) {
@@ -1070,10 +1286,12 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
     return;
   }
 
-  let statusText = 'Done — ' + total + ' file' + (total > 1 ? 's' : '') + ' processed.';
+  let statusText = 'Done -- ' + total + ' file' + (total > 1 ? 's' : '') + ' processed.';
   if (warnings.length) statusText += '\nWarnings:\n' + warnings.join('\n');
   st.textContent = statusText;
   st.style.whiteSpace = 'pre-line';
+  document.getElementById('resultsTitle').textContent = 'Results';
+  if (_demoMode) document.getElementById('demo-step4').classList.add('visible');
   document.getElementById('resultsSubtitle').textContent = 'Extraction complete.';
 
   const AUTO_THRESHOLD = 200;
@@ -1081,14 +1299,14 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
   if (allRecords.length) {
     if (allRecords.length > AUTO_THRESHOLD) {
       autoDownloadCsv(allRecords);
-      resultsEl.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Large result set (' + allRecords.length + ' records) — downloaded as CSV.</p>';
+      resultsEl.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Large result set (' + allRecords.length + ' records) -- downloaded as CSV.</p>';
     } else {
       renderTable(allRecords, resultsEl);
     }
   } else if (allResults.length) {
     if (allResults.length > AUTO_THRESHOLD) {
       autoDownloadJson(allResults);
-      resultsEl.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Large result set (' + allResults.length + ' results) — downloaded as JSON.</p>';
+      resultsEl.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem;">Large result set (' + allResults.length + ' results) -- downloaded as JSON.</p>';
     } else if (allResults.length === 1) {
       renderSingleResult(allResults[0], resultsEl);
     } else {
@@ -1096,9 +1314,48 @@ document.getElementById('extractBtn').addEventListener('click', async () => {
     }
   }
 
+  // Build download buttons
+  const dlContainer = document.getElementById('resultsDownloads');
+  dlContainer.innerHTML = '';
+
+  if (allRecords.length || allResults.length) {
+    // CSV download
+    const csvBtn = document.createElement('button');
+    csvBtn.className = 'download-btn';
+    csvBtn.textContent = 'Download CSV';
+    csvBtn.addEventListener('click', () => {
+      if (allRecords.length) autoDownloadCsv(allRecords);
+      else autoDownloadCsv(allResults);
+    });
+    dlContainer.appendChild(csvBtn);
+
+    // JSON download
+    const jsonBtn = document.createElement('button');
+    jsonBtn.className = 'download-btn';
+    jsonBtn.textContent = 'Download JSON';
+    jsonBtn.addEventListener('click', () => {
+      autoDownloadJson(allRecords.length ? allRecords : allResults);
+    });
+    dlContainer.appendChild(jsonBtn);
+  }
+
+  // Schema download (only for non-text modes)
+  if (W.mode !== 'text') {
+    const schemaBtn = document.createElement('button');
+    schemaBtn.className = 'download-btn';
+    schemaBtn.textContent = 'Download Schema (.yaml)';
+    schemaBtn.addEventListener('click', () => {
+      const s = buildSpec();
+      const yaml = specToYaml(s);
+      const filename = (s.name || 'schema').toLowerCase().replace(/\s+/g, '_') + '.yaml';
+      triggerDownload(new Blob([yaml], { type: 'text/yaml' }), filename);
+    });
+    dlContainer.appendChild(schemaBtn);
+  }
+
+  dlContainer.style.display = 'flex';
   document.getElementById('resultsNav').style.display = '';
-  document.getElementById('resultsSchemaDownload').style.display = 'flex';
-});
+}
 
 // --- Result rendering ---
 function extractedFilename(ext) {
@@ -1164,9 +1421,6 @@ function renderSingleResult(data, container) {
     html += '<tr><td style="font-weight:500; white-space:nowrap;">' + k + '</td><td>' + display + '</td></tr>';
   }
   html += '</tbody></table></div>';
-  const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const jsonUrl = URL.createObjectURL(jsonBlob);
-  html += '<a class="download-btn" href="' + jsonUrl + '" download="' + extractedFilename('json') + '">Download JSON</a>';
   container.innerHTML = html;
 }
 
@@ -1189,7 +1443,7 @@ function renderTable(records, container) {
     }
     let html = '<div class="table-wrap"><table class="results"><thead><tr>';
     for (const k of allKeys) {
-      const arrow = sortCol === k ? (sortAsc ? ' ▲' : ' ▼') : '';
+      const arrow = sortCol === k ? (sortAsc ? ' &#9650;' : ' &#9660;') : '';
       html += '<th style="cursor:pointer; user-select:none;" data-col="' + k + '">' + k + arrow + '</th>';
     }
     html += '</tr></thead><tbody>';
@@ -1204,19 +1458,6 @@ function renderTable(records, container) {
 
   function render() {
     let html = buildTableHtml();
-    const csvRows = [allKeys.join(',')];
-    for (const row of flatRecords) {
-      csvRows.push(allKeys.map(k => {
-        const s = row[k] != null ? String(row[k]) : '';
-        return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s;
-      }).join(','));
-    }
-    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    html += '<a class="download-btn" href="' + url + '" download="' + extractedFilename('csv') + '">Download CSV</a>';
-    const jsonBlob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
-    const jsonUrl = URL.createObjectURL(jsonBlob);
-    html += '<a class="download-btn" href="' + jsonUrl + '" download="' + extractedFilename('json') + '">Download JSON</a>';
     container.innerHTML = html;
     container.querySelectorAll('th[data-col]').forEach(th => {
       th.addEventListener('click', () => {
@@ -1229,8 +1470,8 @@ function renderTable(records, container) {
   render();
 }
 
-// Init with one empty table field
-W.tableFields = [{ name: '', type: 'string', description: '', values: '' }];
+// Init with one empty field
+W.fields = [{ name: '', type: 'string', description: '', values: '' }];
 </script>
 </body>
 </html>

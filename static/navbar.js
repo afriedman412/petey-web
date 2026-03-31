@@ -10,6 +10,7 @@ const GITHUB_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="curre
 
 const NAV_LINKS = [
   { id: 'extractor', label: 'Extractor', href: '/' },
+  { id: 'demo', label: 'Demo', href: '/guide?demo=1', accent: true },
   { id: 'guide', label: 'Guide', href: '/guide' },
   { id: 'runs', label: 'Runs', href: '/runs/page' },
   { id: 'settings', label: 'Settings', href: '/settings/page' },
@@ -42,6 +43,8 @@ if (!document.getElementById(NAV_STYLE_ID)) {
     }
     .page-top-link:hover { color: var(--text, #f2ece4); }
     .page-top-link.active { color: var(--text, #f2ece4); font-weight: 600; }
+    .page-top-link.nav-accent { color: #b8e986; font-weight: 600; }
+    .page-top-link.nav-accent:hover { color: #d4f5a8; }
   `;
   document.head.appendChild(style);
 }
@@ -52,7 +55,9 @@ class NavBar extends HTMLElement {
     const subtitle = this.getAttribute('subtitle') || '';
 
     let linksHtml = NAV_LINKS.map(link => {
-      const cls = link.id === active ? 'page-top-link active' : 'page-top-link';
+      let cls = 'page-top-link';
+      if (link.id === active) cls += ' active';
+      if (link.accent && link.id !== active) cls += ' nav-accent';
       return `<a href="${link.href}" class="${cls}">${link.label}</a>`;
     }).join('\n        ');
 

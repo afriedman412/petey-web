@@ -708,6 +708,7 @@ document.getElementById('logoReset').addEventListener('click', e => {
 // File selection from dropzone component
 let _cachedPageCount = 0;
 let _perFilePages = {};
+let _maxPages = 0;
 
 dzEl.addEventListener('files-selected', e => {
   selectedFiles = e.detail.files;
@@ -723,6 +724,7 @@ dzEl.addEventListener('files-selected', e => {
       .then(data => {
         _cachedPageCount = data.total_pages || 0;
         _perFilePages = data.per_file || {};
+        _maxPages = data.max_pages || 0;
       })
       .catch(() => {});
   }
@@ -1147,14 +1149,16 @@ extractBtn.addEventListener('click', async () => {
   // Process in batches based on parser type
   const concurrency = await getConcurrency();
   let apiKeyError = null;
-  for (let i = 0; i < total && !apiKeyError; i += concurrency) {
+  let _pagesProcessed = 0;
+  let _pageLimitHit = false;
+  for (let i = 0; i < total && !apiKeyError && !_pageLimitHit; i += concurrency) {
     const batch = [];
     for (let j = i; j < Math.min(i + concurrency, total); j++) {
       batch.push(selectedFiles[j]);
     }
 
     const promises = batch.map(async file => {
-      if (apiKeyError) return;
+      if (apiKeyError || _pageLimitHit) return;
       sent++;
       updateBars();
       const logEntry = document.createElement('div');
@@ -1230,14 +1234,23 @@ extractBtn.addEventListener('click', async () => {
       }
       completed++;
       done++;
+      _pagesProcessed += (_perFilePages[file.name] || 1);
+      if (_maxPages > 0 && _pagesProcessed >= _maxPages) {
+        _pageLimitHit = true;
+      }
       updateBars();
     });
 
     await Promise.all(promises);
     if (apiKeyError) break;
+    if (_pageLimitHit) break;
   }
 
   sp.style.display = 'none';
+
+  if (_pageLimitHit) {
+    warnings.push('Page limit reached (' + _maxPages + ' pages). Remaining files were skipped.');
+  }
 
   if (apiKeyError) {
     st.innerHTML = '<span style="color:#f87171; font-weight:600;">' + apiKeyError + '</span>' +

@@ -139,7 +139,14 @@ async def page_count_endpoint(
             total += n
         except Exception:
             counts[f.filename] = 0
-    return {"total_pages": total, "file_count": len(files), "per_file": counts}
+    exceeded = MAX_PAGES > 0 and total > MAX_PAGES
+    return {
+        "total_pages": total,
+        "file_count": len(files),
+        "per_file": counts,
+        "max_pages": MAX_PAGES,
+        "exceeded": exceeded,
+    }
 
 
 @app.post("/extract")
@@ -784,6 +791,20 @@ async def template_builder_page():
 @app.get("/guide", response_class=HTMLResponse)
 async def guide_page():
     return _load_template("guide.html")
+
+
+@app.get("/demo/{filename}")
+async def demo_file(filename: str):
+    from fastapi.responses import FileResponse
+    # Look in benchmarks/claude_med first, then demo_docs
+    for base in [
+        Path(__file__).resolve().parent.parent.parent / "benchmarks" / "claude_med",
+        Path(__file__).resolve().parent.parent.parent / "demo_docs",
+    ]:
+        path = base / filename
+        if path.exists() and path.suffix == ".pdf":
+            return FileResponse(path, media_type="application/pdf", filename=filename)
+    return JSONResponse({"error": "Demo file not found"}, 404)
 
 
 @app.get("/about", response_class=HTMLResponse)

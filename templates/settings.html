@@ -158,6 +158,7 @@ input::placeholder { color: var(--text-dim); }
     </div>
     <div class="info-banner">
       Keys are stored securely per-user and never returned in full.
+      <br><span style="color:var(--text-dim); font-size:0.72rem;">By providing an API key, you acknowledge that usage through Petey will incur charges from the respective service provider.</span>
     </div>
     <div id="keyEntries"></div>
     <button class="btn-add-key" id="addKeyBtn">+ Add key</button>
@@ -354,7 +355,12 @@ async function doSave() {
   }
 }
 
-document.getElementById('saveBtn').addEventListener('click', () => doSave());
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  await doSave();
+  statusEl.className = 'status ok';
+  statusEl.textContent = 'Settings saved!';
+  setTimeout(() => { statusEl.textContent = ''; }, 2000);
+});
 
 // --- Key validation ---
 async function validateKey(entry, statusDiv) {
@@ -375,6 +381,7 @@ async function validateKey(entry, statusDiv) {
     const data = await resp.json();
     statusDiv.textContent = data.message || (data.valid ? 'Valid' : 'Invalid key');
     statusDiv.className = 'key-status ' + (data.valid ? 'valid' : 'invalid');
+    if (data.valid) doSave();
   } catch (e) {
     statusDiv.textContent = 'Validation error: ' + e.message;
     statusDiv.className = 'key-status invalid';

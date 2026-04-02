@@ -355,23 +355,26 @@ table.results tr:hover td { background: var(--surface-2); }
   <!-- ============================================================ -->
   <!-- DEMO OVERVIEW (shown before entering the walkthrough) -->
   <div class="wizard-step" id="demo-overview">
-    <div class="step-title">Demo: Extract data from a clinical note</div>
-    <div class="step-subtitle">Walk through the entire extraction process with a sample document.</div>
+    <div class="step-title" id="demoOverviewTitle">Demo: Extract data from a clinical note</div>
+    <div class="step-subtitle" id="demoOverviewSubtitle">Walk through the entire extraction process with a sample document.</div>
 
     <div class="demo-explainer visible" style="display:block;">
       <div class="demo-label">About this demo</div>
-      We'll extract structured data from a <strong>synthetic emergency department clinical note</strong>.
-      The document is a one-page PDF containing a patient's name, age, complaints, and visit outcome written in clinical prose.
-      <br><br>
-      You'll walk through each step: uploading, choosing a mode, picking tools, defining a schema, and extracting. Each step includes an explanation of <strong>why</strong> we're making each choice.
-      <div class="demo-disclaimer">This document was generated entirely by AI for demonstration purposes. It does not represent a real patient, provider, or medical event. Any resemblance to real persons or events is coincidental.</div>
+      <div id="demoOverviewAbout">
+        We'll extract structured data from a <strong>synthetic emergency department clinical note</strong>.
+        The document is a one-page PDF containing a patient's name, age, complaints, and visit outcome written in clinical prose.
+        <br><br>
+        You'll walk through each step: uploading, choosing a mode, picking tools, defining a schema, and extracting. Each step includes an explanation of <strong>why</strong> we're making each choice.
+      </div>
+      <div class="demo-disclaimer" id="demoOverviewDisclaimer">This document was generated entirely by AI for demonstration purposes. It does not represent a real patient, provider, or medical event. Any resemblance to real persons or events is coincidental.</div>
+      <div class="demo-disclaimer" style="margin-top:0.5rem;">This demo uses pre-computed results to show you the full workflow without needing an API key. To run real extractions, <a href="/settings/page" style="color:var(--accent);">add an API key in Settings</a>.</div>
     </div>
 
     <div style="margin-top:1.25rem;">
       <div class="field-group-label">The document</div>
       <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg); padding:0.75rem; margin-top:0.5rem; text-align:center;">
-        <img src="/static/demo_screenshot.png" alt="Demo clinical note" class="demo-thumb" onclick="openLightbox(this.src)" style="max-width:100%; border-radius:var(--r);">
-        <div style="margin-top:0.5rem;">
+        <img id="demoOverviewImg" src="/static/demo_screenshot.png" alt="Demo document" class="demo-thumb" onclick="openLightbox(this.src)" style="max-width:100%; border-radius:var(--r); cursor:pointer;">
+        <div style="margin-top:0.5rem;" id="demoOverviewDownloads">
           <a href="/demo/patient_01.pdf" download="patient_01.pdf" style="font-size:0.75rem; color:var(--accent); text-decoration:none;">Download PDF</a>
         </div>
       </div>
@@ -515,6 +518,11 @@ table.results tr:hover td { background: var(--surface-2); }
       <div class="config-group">
         <label>Schema name</label>
         <input type="text" class="schema-name-input" id="schemaName" placeholder="my_extraction_schema" style="display:block; margin-top:0.3rem; border-bottom:1px solid var(--border); padding-bottom:0.3rem;">
+      </div>
+      <div class="config-group" id="headerPagesGroup" style="display:none;">
+        <label>Header pages</label>
+        <input type="number" id="cfgHeaderPages" value="0" min="0" max="10" style="width:4rem;">
+        <div class="config-hint">Send these pages with every other page for shared context (e.g. a cover page with filer info that applies to all entries).</div>
       </div>
     </div>
 

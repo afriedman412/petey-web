@@ -19,7 +19,16 @@ except ImportError:
     firestore = None
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SETTINGS_PATH = BASE_DIR / "settings.json"
+
+# When running as a frozen app (.app bundle), the bundle is read-only.
+# Store settings in ~/Library/Application Support/Petey/ instead.
+import sys
+if getattr(sys, "frozen", False):
+    _app_support = Path.home() / "Library" / "Application Support" / "Petey"
+    _app_support.mkdir(parents=True, exist_ok=True)
+    SETTINGS_PATH = _app_support / "settings.json"
+else:
+    SETTINGS_PATH = BASE_DIR / "settings.json"
 COLLECTION = "user_settings"
 
 DEFAULTS = {

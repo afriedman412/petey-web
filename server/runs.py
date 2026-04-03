@@ -11,7 +11,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 RUNS_SUBCOLLECTION = "runs"
-LOCAL_RUNS_PATH = Path(__file__).resolve().parent.parent / "runs.json"
+
+import sys
+if getattr(sys, "frozen", False):
+    _app_support = Path.home() / "Library" / "Application Support" / "Petey"
+    _app_support.mkdir(parents=True, exist_ok=True)
+    LOCAL_RUNS_PATH = _app_support / "runs.json"
+else:
+    LOCAL_RUNS_PATH = Path(__file__).resolve().parent.parent / "runs.json"
 
 
 def _use_local() -> bool:

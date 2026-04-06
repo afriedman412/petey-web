@@ -804,6 +804,11 @@ async def demos_page():
     return _load_template("demos.html")
 
 
+@app.get("/schema-tutorial", response_class=HTMLResponse)
+async def schema_tutorial_page():
+    return _load_template("schema_tutorial.html")
+
+
 @app.get("/keys")
 async def keys_page():
     from fastapi.responses import RedirectResponse

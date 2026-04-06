@@ -1,0 +1,135 @@
+section,subcategory,fy_2019_20_actual,fy_2020_21_adopted,fy_2020_21_amended,fy_2021_22_adopted,fy_2021_22_percent_total,fy_2022_23_projected
+all_city_funds,Capital Projects,166069098,201508617,247929331,216595512,22,184735381
+all_city_funds,Special Revenue,167647151,195098205,240134514,197119300,20,192117875
+all_city_funds,General,185431856,187409758,188749389,195971150,20,197527779
+all_city_funds,Debt Service,168597796,141180251,232993610,174400343,18,171089975
+all_city_funds,Enterprise,130729957,156279568,155042248,139929220,14,141335854
+all_city_funds,Internal Service,50691721,55545951,50492773,51358356,5,52911708
+all_city_funds,Reserved General Fund,2372131,223700,223700,223700,1,222700
+all_city_funds,Special Assessment,,25000,25000,25000,1,25125
+all_city_funds,Expendable Trust,,2400,2400,2400,1,2400
+general_fund,Police,70291731,72580599,71220278,74216221,38,74014126
+general_fund,Fire,42010766,43839001,45603469,47529869,24,47378702
+general_fund,Park and Recreation,11635679,13775949,13033611,14567701,7,15082822
+general_fund,Finance,21063024,11599579,13453164,11342522,6,12955160
+general_fund,Library,7606328,8930798,8619267,9043405,5,8894732
+general_fund,City Manager,6904760,6683223,7829938,8088916,4,8122860
+general_fund,Information Technology,6472355,7196037,7216502,7764881,4,7655644
+general_fund,Development Services,5386769,6442484,6191856,7217737,4,7137995
+general_fund,Engineering,4486926,4757431,4631008,4700571,2,4673515
+general_fund,Legal,3182338,3656638,3326439,3593077,2,3642267
+general_fund,Neighborhood Services,2292233,3385170,3055539,2897864,1,2859755
+general_fund,Human Resources,1667346,1964482,1981192,2168302,1,2263419
+general_fund,City Clerk,998894,965177,1051190,1144046,1,1131526
+general_fund,Civil and Human Rights,537707,755836,692001,821536,1,839055
+general_fund,Mayor and Council,482517,508367,474433,503183,1,505380
+general_fund,Public Works,412483,368987,369501,371321,1,370821
+enterprise_funds,Sanitary Sewer,56097841,47983034,52323863,46332033,33,48677733
+enterprise_funds,Stormwater,49236788,43800556,39054236,40926898,29,42461291
+enterprise_funds,Housing Services,23796561,24275519,24482889,24547897,18,23654359
+enterprise_funds,Solid Waste,12023226,28034899,29214499,14873332,11,14841585
+enterprise_funds,Parking,12965432,11539349,9382582,12681179,9,11298006
+enterprise_funds,Golf,395775,646211,584179,567880,1,402880
+special_revenue,TIF,34114924,43043287,43304298,49632298,25,44078447
+special_revenue,Local Option Sales and Service Tax,30370368,47257136,35650877,44422826,23,44861378
+special_revenue,Road Use Tax,30835565,33292552,32151136,31585771,16,31701119
+special_revenue,Employee Benefit Tax Accounts,22095468,25049456,25479671,25766861,13,26668702
+special_revenue,Other Employee Benefits,19942318,19145802,19538110,21402373,11,22113026
+special_revenue,Neighborhood Services Grants,8856379,9894382,17801821,9059384,5,9063328
+special_revenue,SSMIDs,2439357,2723372,2678805,2794570,1,2824570
+special_revenue,IRA Revenue/IRA Bonds,1204717,2600150,2600150,2697670,1,2697670
+special_revenue,Severance Payouts,3424131,2500000,2500000,2500000,1,2500000
+special_revenue,Police Grants,802269,749000,2189000,2283000,1,744765
+special_revenue,City Manager Programs,472623,2023900,49215481,1970300,,1965300
+special_revenue,Sales Tax Increment (Flood Mitigation),1823397,2050000,2050000,1942353,,1863107
+special_revenue,Police Programs,454010,744500,513500,513500,,486500
+special_revenue,Library Gifts,378325,434400,344215,441400,,442605
+special_revenue,Housing Grants,71275,50000,50000,50000,,50250
+special_revenue,Parks Programs,185084,263468,260395,29995,,29995
+special_revenue,Engineering Programs,20295,22500,20200,22700,,22813
+special_revenue,Neighborhood Services Programs,,4000,4000,4000,,4000
+special_revenue,Mayor & Council Programs,,300,300,300,,300
+special_revenue,Franchise Fee Settlement,8743350,3000000,2750000,,,
+special_revenue,Flood Mitigation/Recover Buyout,1373111,250000,1032554,,,
+special_revenue,Fire Programs,40183,,,,,
+road_use_tax_allocations,Street Maintenance,13643706,16212822,15532335,16434297,52,16470924
+road_use_tax_allocations,Street Lighting,2703297,2920000,2825000,2855000,9,2858150
+road_use_tax_allocations,Capital Project Allocation,2330000,3785000,3785000,2300000,7,2300000
+road_use_tax_allocations,Traffic/Other,2198235,2198235,2198235,2198235,7,2198235
+road_use_tax_allocations,Street Trees,1704817,2151020,1922949,2127171,7,2127171
+road_use_tax_allocations,Equipment/Vehicle Replacement,4696805,2500000,2240000,2030000,6,2030000
+road_use_tax_allocations,Signal Installation & Maintenance,1381754,1301033,1293495,1318309,4,1346812
+road_use_tax_allocations,"Sign, Painting, Signal and Lighting",1067650,1171870,1292091,1251015,4,1277304
+road_use_tax_allocations,Traffic Engineering,899911,870916,882274,891969,3,912696
+road_use_tax_allocations,Street Excavation,209390,181656,179757,179775,,179827
+special_revenue,Streets,52123257,57500768,75523989,72391908,33,98142881
+special_revenue,Municipal Buildings,3914718,35363237,36892882,55221812,25,14470000
+special_revenue,Storm Sewer,42245886,40425000,45497811,30025000,14,23255000
+special_revenue,Sanitary Sewer,21200902,28303220,29217428,17747000,8,5500000
+special_revenue,Parks,10944951,10873190,17480382,12936643,6,14772500
+special_revenue,Bridge,11499928,10137652,18100900,12141329,6,14900000
+special_revenue,Miscellaneous,16387926,6570550,12152386,8251820,4,7725000
+special_revenue,Parking,3387124,3900000,2864551,3500000,2,2100000
+special_revenue,Fire,2422795,6130000,7596099,2325000,1,2750000
+special_revenue,Library,1941611,2305000,2602903,2055000,,1120000
+special_revenue,GO Bonds,168209528,140791983,232605342,174097375,100,170937869
+special_revenue,Lease Purchase,388269,388268,388268,302968,,152106
+special_revenue,Employee Health Insurance,29966077,34091047,30805608,30866034,60,32394475
+special_revenue,Equipment Parts & Maintenance,6957340,7793572,7156364,7498380,15,7602958
+special_revenue,Equipment Purchases,8705395,7552783,7560000,7145000,14,7085250
+special_revenue,Forestry,1901455,2204168,1970462,2179730,4,2164221
+special_revenue,Fuel,1860958,2331496,1495696,2079700,4,2079724
+special_revenue,Radio Services,807620,904690,858667,929153,2,924721
+special_revenue,Telephone Communications,497174,586695,564476,578859,1,578859
+special_revenue,Central Supplies,-4297,81500,81500,81500,,81500
+general_fund,Finance,,,,11342522,,
+enterprise_funds,Finance,,,,,,
+special_revenue,Finance,,,,107055117,,
+general_fund,Public Works,,,,371321,,
+enterprise_funds,Public Works,,,,102132263,,
+special_revenue,Public Works,,,,18741243,,
+general_fund,Police,,,,74216221,,
+enterprise_funds,Police,,,,695696,,
+special_revenue,Police,,,,2796500,,
+general_fund,Human Resources,,,,2168302,,
+enterprise_funds,Human Resources,,,,,,
+special_revenue,Human Resources,,,,21402373,,
+general_fund,Fire,,,,47529869,,
+enterprise_funds,Fire,,,,,,
+special_revenue,Fire,,,,,,
+general_fund,Development Services,,,,7217737,,
+enterprise_funds,Development Services,,,,,,
+special_revenue,Development Services,,,,30703632,,
+general_fund,Housing Services,,,,,,
+enterprise_funds,Housing Services,,,,24547897,,
+special_revenue,Housing Services,,,,50000,,
+general_fund,Engineering,,,,4700571,,
+enterprise_funds,Engineering,,,,11985484,,
+special_revenue,Engineering,,,,6380693,,
+general_fund,Park & Recreation,,,,14567701,,
+enterprise_funds,Park & Recreation,,,,567880,,
+special_revenue,Park & Recreation,,,,29995,,
+general_fund,Neighborhood Services,,,,2897864,,
+enterprise_funds,Neighborhood Services,,,,,,
+special_revenue,Neighborhood Services,,,,9445047,,
+general_fund,Library,,,,9043405,,
+enterprise_funds,Library,,,,,,
+special_revenue,Library,,,,441400,,
+general_fund,Information Technology,,,,7764881,,
+enterprise_funds,Information Technology,,,,,,
+special_revenue,Information Technology,,,,,,
+general_fund,City Manager,,,,8088916,,
+enterprise_funds,City Manager,,,,,,
+special_revenue,City Manager,,,,73000,,
+general_fund,Legal,,,,3593077,,
+enterprise_funds,Legal,,,,,,
+special_revenue,Legal,,,,,,
+general_fund,City Clerk,,,,1144046,,
+enterprise_funds,City Clerk,,,,,,
+special_revenue,City Clerk,,,,,,
+general_fund,Civil and Human Rights,,,,821536,,
+enterprise_funds,Civil and Human Rights,,,,,,
+special_revenue,Civil and Human Rights,,,,,,
+general_fund,Mayor & Council,,,,503183,,
+enterprise_funds,Mayor & Council,,,,,,
+special_revenue,Mayor & Council,,,,300,,

@@ -5,6 +5,7 @@ __pycache__/
 venv/
 .env
 *.csv
+!static/demo/*.csv
 output/
 PAR_files/
 .python-version

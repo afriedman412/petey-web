@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Settings — Petey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -169,8 +170,14 @@ input::placeholder { color: var(--text-dim); }
       <span class="card-label">API Keys</span>
     </div>
     <div class="info-banner">
-      Keys are stored securely per-user and never returned in full.
-      <br><span style="color:var(--text-dim); font-size:0.72rem;">By providing an API key, you acknowledge that usage through Petey will incur charges from the respective service provider.</span>
+      API keys are the credentials Petey uses to access external services on your behalf.
+      <a href="/about#keys" style="color:var(--accent); text-decoration:none; font-weight:500;">Learn more about API keys &rarr;</a>
+      <br><span style="font-size:0.72rem; margin-top:0.35rem; display:inline-block;">Get your API key:
+        <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">OpenAI</a> &middot;
+        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">Anthropic</a> &middot;
+        <a href="https://www.datalab.to/dashboard" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">Datalab</a> &middot;
+        <a href="https://www.unstructured.io/api-key-free" target="_blank" rel="noopener" style="color:var(--accent); text-decoration:none;">Unstructured</a>
+      </span>
     </div>
     <div id="keyEntries"></div>
     <button class="btn-add-key" id="addKeyBtn">+ Add key</button>
@@ -178,6 +185,9 @@ input::placeholder { color: var(--text-dim); }
 
   <button class="save-btn" id="saveBtn">Save settings</button>
   <div class="status" id="status"></div>
+  <div style="font-size:0.72rem; color:var(--text-dim); margin-top:1rem; line-height:1.6;">
+    Keys are stored securely per-user and never returned in full. By providing an API key, you acknowledge that usage through Petey will incur charges from the respective service provider.
+  </div>
   <div id="signOutArea" style="display:none; margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border);">
     <span id="userEmail" style="font-size:0.78rem; color:var(--text-muted);"></span>
     <button id="signOutBtn" style="margin-left:1rem; background:none; border:none; font-size:0.78rem; color:var(--text-muted); cursor:pointer; font-family:inherit; text-decoration:underline; text-underline-offset:3px;">Sign out</button>

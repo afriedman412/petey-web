@@ -9,5 +9,6 @@ PAR_files/
 output/
 tests/
 *.csv
+!static/demo/*.csv
 par_batch.py
 .DS_Store

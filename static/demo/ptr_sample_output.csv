@@ -1,0 +1,6 @@
+filer_name,state_district,asset,ticker,asset_type,transaction_type,transaction_date,notification_date,amount,cap_gains_over_200,filing_status,subholding_of,description,_source_file
+Cleo Fields,LA06,Alphabet Inc. - Class A Common Stock (GOOGL),GOOGL,ST,P,12/26/2025,12/26/2025,Over $50,No,New,Morgan Stanley - E*TRADE #2,,20033732.pdf
+Cleo Fields,LA06,FIGMA INC CLASS A (FIG),FIG,,S (partial),12/26/2025,12/26/2025,001 - $15,No,New,Morgan Stanley - E*TRADE #2,Stock,20033732.pdf
+Cleo Fields,LA06,FIGMA INC CLASS A (FIG),FIG,,S,12/26/2025,12/26/2025,Over $50,No,New,Morgan Stanley - E*TRADE #2,Stock,20033732.pdf
+Cleo Fields,LA06,IREN Limited - Ordinary Shares (IREN),IREN,ST,S,12/26/2025,12/26/2025,Over $50,Yes,New,Morgan Stanley - E*TRADE #2,,20033732.pdf
+Cleo Fields,LA06,Opendoor Technologies Inc - Common Stock (OPEN),OPEN,ST,S,12/26/2025,12/26/2025,001 - $15,No,New,Morgan Stanley - E*TRADE #2,,20033732.pdf

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Demos — Petey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,8 +93,17 @@ body {
       <img src="/static/demo/clinical_screenshot.png" alt="Clinical note">
       <div class="demo-card-body">
         <span class="badge">Query</span>
-        <h3>Getting Started</h3>
+        <h3>Clinical Records: Getting Started</h3>
         <p>Extract patient data from a clinical note. A gentle introduction to schemas, modes, and the extraction workflow.</p>
+      </div>
+    </a>
+
+    <a class="demo-card" href="/schema-tutorial">
+      <img src="/static/demo/clinical_screenshot.png" alt="Schema concepts">
+      <div class="demo-card-body">
+        <span class="badge">Tutorial</span>
+        <h3>Clinical Records: Understanding Schemas</h3>
+        <p>Build a schema from scratch. Learn field types, descriptions, and the difference between copying and interpreting data.</p>
       </div>
     </a>
 
@@ -101,7 +111,7 @@ body {
       <img src="/static/demo/des_moines_screenshot.png" alt="City budget tables">
       <div class="demo-card-body">
         <span class="badge">Table</span>
-        <h3>Table Extraction</h3>
+        <h3>City Budget: Table Extraction</h3>
         <p>Extract budget line items from a city operating budget. Subtables, categories, and mixed data types across multiple pages.</p>
       </div>
     </a>
@@ -110,7 +120,7 @@ body {
       <img src="/static/demo/ptr_screenshot.png" alt="Congressional financial disclosure">
       <div class="demo-card-body">
         <span class="badge">Table + Header Pages</span>
-        <h3>Header Pages</h3>
+        <h3>Financial Disclosure: Header Pages</h3>
         <p>Extract stock transactions from a Congressional disclosure. Uses header pages to propagate filer info across all rows.</p>
       </div>
     </a>
@@ -118,9 +128,9 @@ body {
     <a class="demo-card" href="/guide?demo=taxroll">
       <img src="/static/demo/tax_roll_screenshot.png" alt="Tax assessment roll">
       <div class="demo-card-body">
-        <span class="badge">Table + Suggest Fields</span>
-        <h3>Suggest Fields</h3>
-        <p>Extract property records from a non-traditional layout. Let Suggest Fields figure out the structure automatically.</p>
+        <span class="badge">Page Range + Suggest Fields</span>
+        <h3>Tax Roll: Page Range + Suggest Fields</h3>
+        <p>Target specific pages in a large document, then let Suggest Fields figure out the schema for a non-traditional layout.</p>
       </div>
     </a>
 

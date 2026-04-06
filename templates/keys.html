@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>API Keys — Petey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -136,7 +137,7 @@ body {
   <div class="which-keys">
     <h3>Which keys do I need?</h3>
     <p><strong>Required (pick one):</strong> OpenAI or Anthropic. These are the AI models that actually read your documents and extract data. You need at least one.</p>
-    <p><strong>Optional:</strong> Marker or Unstructured. These are AI-powered PDF parsers that do a better job reading complex layouts, scanned documents, and handwriting. The built-in parser (PyMuPDF) is free and fast, but it can struggle with tabular data and doesn't handle scanned or image-based PDFs well.</p>
+    <p><strong>Optional:</strong> Datalab or Unstructured. These are AI-powered PDF parsers that do a better job reading complex layouts, scanned documents, and handwriting. The built-in parser (PyMuPDF) is free and fast, but it can struggle with tabular data and doesn't handle scanned or image-based PDFs well.</p>
   </div>
 
   <h2 class="section-title" id="setup">Setup</h2>
@@ -166,15 +167,15 @@ body {
   </div>
 
   <div class="provider">
-    <h3>Datalab (Marker)</h3>
+    <h3>Datalab</h3>
     <div class="role">AI-powered PDF parser — best for scanned docs, complex layouts, and handwriting</div>
     <ol>
       <li>Go to <a href="https://www.datalab.to/" target="_blank" rel="noopener">datalab.to</a> and click "Sign Up" to create an account</li>
       <li>Once logged in, go to <a href="https://www.datalab.to/app/keys" target="_blank" rel="noopener">API Keys</a> in your dashboard</li>
       <li>Click "Create Key", give it a name, and copy the key</li>
-      <li>Paste it into <a href="/settings/page">Petey Settings</a> under "Marker API Key"</li>
+      <li>Paste it into <a href="/settings/page">Petey Settings</a> under "Datalab API Key"</li>
     </ol>
-    <div class="note">Marker is the recommended parser for scanned or handwritten documents. Datalab offers a free tier with generous limits.</div>
+    <div class="note">Datalab is the recommended parser for scanned or handwritten documents. Free tier available with generous limits.</div>
   </div>
 
   <div class="provider">
@@ -186,7 +187,7 @@ body {
       <li>Generate a new key and copy it</li>
       <li>Paste it into <a href="/settings/page">Petey Settings</a> under "Unstructured API Key"</li>
     </ol>
-    <div class="note">An alternative to Marker. Useful if you're already using Unstructured in other workflows. Free tier available.</div>
+    <div class="note">An alternative to Datalab. Useful if you're already using Unstructured in other workflows. Free tier available.</div>
   </div>
 
   <!-- ============================================================ -->
@@ -216,7 +217,7 @@ body {
         <tr><td>OpenAI</td><td>GPT-4o</td><td>~$0.05</td><td>Medium</td><td>Strong on complex layouts. Higher cost.</td></tr>
         <tr><td>Anthropic</td><td>Claude Haiku 4.5</td><td>~$0.01</td><td>Fast</td><td>Comparable to GPT-4.1 Mini. Fast and cheap.</td></tr>
         <tr><td>Anthropic</td><td>Claude Sonnet 4</td><td>~$0.04</td><td>Medium</td><td>Very capable. Good for nuanced extraction.</td></tr>
-        <tr style="border-top:2px solid var(--border);"><td>Datalab</td><td>Marker</td><td>~$0.005</td><td>Medium</td><td>AI parser. Best for tables, scans, and handwriting. Free tier available.</td></tr>
+        <tr style="border-top:2px solid var(--border);"><td>Datalab</td><td>Datalab</td><td>~$0.005</td><td>Medium</td><td>AI parser. Best for tables, scans, and handwriting. Free tier available.</td></tr>
         <tr><td></td><td>PyMuPDF</td><td>Free</td><td>Fast</td><td>Built in. Good for clean digital PDFs. Struggles with tables and scans.</td></tr>
       </tbody>
     </table>
@@ -240,7 +241,7 @@ body {
 
   <details class="faq-item">
     <summary>Do I need a parser key?</summary>
-    <div class="faq-answer">It depends on your documents. The built-in parser (PyMuPDF) is fast and free, and works great for clean, digitally-created PDFs with mostly text. But if your documents have tables, scanned pages, or handwriting, an AI parser like Marker will give significantly better results. The <a href="/demos">table extraction demos</a> all use Marker for this reason.</div>
+    <div class="faq-answer">It depends on your documents. The built-in parser (PyMuPDF) is fast and free, and works great for clean, digitally-created PDFs with mostly text. But if your documents have tables, scanned pages, or handwriting, an AI parser like Datalab will give significantly better results. The <a href="/demos">table extraction demos</a> all use Datalab for this reason.</div>
   </details>
 
   <details class="faq-item">

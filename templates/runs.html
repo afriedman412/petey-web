@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Runs — Petey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -315,6 +316,27 @@ function renderTable() {
   }
 }
 
+function schemaToYaml(spec) {
+  let y = '';
+  if (spec.name) y += 'name: ' + spec.name + '\n';
+  if (spec.mode) y += 'mode: ' + spec.mode + '\n';
+  if (spec.header_pages) y += 'header_pages: ' + spec.header_pages + '\n';
+  if (spec.pages) y += 'pages: "' + spec.pages + '"\n';
+  if (spec.parser) y += 'parser: ' + spec.parser + '\n';
+  if (spec.model) y += 'model: ' + spec.model + '\n';
+  if (spec.instructions) y += 'instructions: "' + spec.instructions.replace(/"/g, '\\"') + '"\n';
+  if (spec.fields && Object.keys(spec.fields).length) {
+    y += 'fields:\n';
+    for (const [name, cfg] of Object.entries(spec.fields)) {
+      y += '  ' + name + ':\n';
+      y += '    type: ' + (cfg.type || 'string') + '\n';
+      if (cfg.description) y += '    description: "' + cfg.description.replace(/"/g, '\\"') + '"\n';
+      if (cfg.values && cfg.values.length) y += '    values: [' + cfg.values.join(', ') + ']\n';
+    }
+  }
+  return y;
+}
+
 async function showDetail(runId) {
   const run = currentRuns.find(r => r.id === runId);
   if (!run) return;
@@ -353,7 +375,11 @@ async function showDetail(runId) {
   inner += '</div>';
 
   inner += '<div class="detail-actions">';
-  inner += '<button class="detail-btn primary btn-load">Load settings in Extractor</button>';
+  inner += '<button class="detail-btn primary btn-load">Reload Run</button>';
+  if (run.schema_spec) {
+    inner += '<button class="detail-btn btn-view-schema">View Schema</button>';
+    inner += '<button class="detail-btn btn-dl-schema">Download Schema</button>';
+  }
   if (hasResults) {
     inner += '<button class="detail-btn btn-json">Download JSON</button>';
     inner += '<button class="detail-btn btn-csv">Download CSV</button>';
@@ -362,6 +388,9 @@ async function showDetail(runId) {
   }
   inner += '<button class="detail-btn danger btn-delete" style="margin-left:auto;">Delete</button>';
   inner += '</div>';
+  if (run.schema_spec) {
+    inner += '<pre class="schema-preview" style="display:none; margin-top:1rem; background:var(--surface-2); border:1px solid var(--border); border-radius:var(--r); padding:1rem; font-size:0.75rem; line-height:1.5; overflow-x:auto; color:var(--text-dim); white-space:pre-wrap;">' + schemaToYaml(run.schema_spec) + '</pre>';
+  }
   inner += '</div>';
 
   // Insert a new table row right after the clicked one
@@ -378,6 +407,28 @@ async function showDetail(runId) {
 
   // Wire up buttons
   const panel = detailRow.querySelector('.run-detail');
+
+  const viewSchemaBtn = panel.querySelector('.btn-view-schema');
+  if (viewSchemaBtn) {
+    const pre = panel.querySelector('.schema-preview');
+    viewSchemaBtn.addEventListener('click', () => {
+      const open = pre.style.display !== 'none';
+      pre.style.display = open ? 'none' : 'block';
+      viewSchemaBtn.textContent = open ? 'View Schema' : 'Hide Schema';
+    });
+  }
+
+  const dlSchemaBtn = panel.querySelector('.btn-dl-schema');
+  if (dlSchemaBtn) {
+    dlSchemaBtn.addEventListener('click', () => {
+      const yaml = schemaToYaml(run.schema_spec);
+      const blob = new Blob([yaml], { type: 'text/yaml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url;
+      a.download = (run.schema_spec.name || 'schema') + '.yaml';
+      a.click(); URL.revokeObjectURL(url);
+    });
+  }
 
   panel.querySelector('.btn-load').addEventListener('click', () => {
     const params = new URLSearchParams();

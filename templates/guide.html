@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Guide — Petey</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -124,16 +125,16 @@ body {
 .mode-card .mode-desc { font-size: 0.78rem; color: var(--text-dim); line-height: 1.5; }
 
 /* PARSER CARDS */
-.parser-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
-.parser-card {
+.tool-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+.tool-card {
   background: var(--surface); border: 1.5px solid var(--border);
   border-radius: var(--r-lg); padding: 1.1rem 1.25rem; cursor: pointer;
   transition: all 0.2s;
 }
-.parser-card:hover { border-color: var(--text-dim); }
-.parser-card.selected { border-color: var(--accent); background: var(--accent-dim); }
-.parser-card .parser-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.25rem; }
-.parser-card .parser-desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.45; }
+.tool-card:hover { border-color: var(--text-dim); }
+.tool-card.selected { border-color: var(--accent); background: var(--accent-dim); }
+.tool-card .tool-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.25rem; }
+.tool-card .tool-desc { font-size: 0.75rem; color: var(--text-dim); line-height: 1.45; }
 
 /* CONFIG FORM */
 .config-form { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -329,7 +330,7 @@ table.results tr:hover td { background: var(--surface-2); }
   .main { padding: 1.5rem 1rem 3rem; }
   .auth-overlay h2 { font-size: 2rem; }
   .mode-grid { grid-template-columns: 1fr; }
-  .parser-grid { grid-template-columns: 1fr; }
+  .tool-grid { grid-template-columns: 1fr; }
   .field-row {
     grid-template-columns: 1fr;
     gap: 0.25rem;
@@ -340,7 +341,7 @@ table.results tr:hover td { background: var(--surface-2); }
   .step-dot { width: 24px; height: 24px; font-size: 0.6rem; }
   .card { padding: 1rem 1rem; }
   .mode-card { padding: 1rem; }
-  .parser-card { padding: 0.85rem 1rem; }
+  .tool-card { padding: 0.85rem 1rem; }
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .btn-next, .btn-back, .btn-add, .btn-suggest { min-height: 44px; }
 }
@@ -422,7 +423,7 @@ if (new URLSearchParams(window.location.search).get('demo')) {
       <div class="config-group">
         <label>Page range <span style="color:var(--text-dim); font-weight:400;">(optional)</span></label>
         <input type="text" id="cfgPageRange" placeholder="e.g. 5-10 or 1,3,5-7" style="width:14rem;">
-        <div class="config-hint">Only process specific pages. Leave blank to process all pages.</div>
+        <div class="config-hint">Only process specific pages from a single document. Leave blank to process all pages.</div>
       </div>
     </div>
     <div id="tryDemoWrap" style="text-align:center; margin-top:1rem;">
@@ -466,38 +467,28 @@ if (new URLSearchParams(window.location.search).get('demo')) {
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 3: Tools -->
+  <!-- STEP 3: Parser -->
   <!-- ============================================================ -->
   <div class="wizard-step" id="step-2">
-    <div class="step-title">Pick your tools</div>
-    <div class="step-subtitle">Choose how Petey reads and processes your PDFs.</div>
+    <div class="step-title">Choose a parser</div>
+    <div class="step-subtitle">The parser reads text from your PDF.</div>
     <div class="demo-explainer" id="demo-step2">
       <div class="demo-label">Demo walkthrough</div>
-      The <strong>parser</strong> reads text from the PDF. Since this is a clean, digital document, <strong>PyMuPDF</strong> is fast and free. For scanned or handwritten documents, use Marker instead.
-      <br><br>
-      The <strong>model</strong> does the actual extraction. This document is simple enough that any model works — even the cheapest ones score 97%+ on documents like this.
+      <div id="demoToolsParser">The <strong>parser</strong> reads text from the PDF. PyMuPDF is fast and free for most digital documents. For scanned or handwritten documents, use Datalab instead.</div>
     </div>
 
-    <div class="field-group-label">Parser</div>
-    <div class="parser-grid">
-      <div class="parser-card selected" data-parser="pymupdf">
-        <div class="parser-name">PyMuPDF</div>
-        <div class="parser-desc">Fast, local text extraction. Works for most text-based PDFs.</div>
+    <div class="tool-grid">
+      <div class="tool-card selected" data-parser="pymupdf">
+        <div class="tool-name">PyMuPDF</div>
+        <div class="tool-desc">Fast, local text extraction. Works for most text-based PDFs.</div>
       </div>
-      <div class="parser-card" data-parser="marker">
-        <div class="parser-name">Marker</div>
-        <div class="parser-desc">AI-powered OCR for scanned docs, handwriting, or complex layouts. Requires API key.</div>
+      <div class="tool-card" data-parser="marker">
+        <div class="tool-name">Datalab</div>
+        <div class="tool-desc">AI-powered OCR for scanned docs, handwriting, or complex layouts. Requires Datalab API key.</div>
       </div>
-      <div class="parser-card" data-parser="unstructured">
-        <div class="parser-name">Unstructured</div>
-        <div class="parser-desc">Alternative AI parser. Requires API key.</div>
-      </div>
-    </div>
-
-    <div class="config-form" style="margin-top:1.5rem;">
-      <div class="config-group">
-        <label>Model</label>
-        <select id="modelSelect" style="width:18rem;"></select>
+      <div class="tool-card" data-parser="unstructured">
+        <div class="tool-name">Unstructured</div>
+        <div class="tool-desc">Alternative AI parser. Requires Unstructured API key.</div>
       </div>
     </div>
 
@@ -505,17 +496,53 @@ if (new URLSearchParams(window.location.search).get('demo')) {
 
     <div class="wizard-nav">
       <button class="btn-back" onclick="goToStep(1)">Back</button>
-      <button class="btn-next" id="toolsNext">Next</button>
+      <button class="btn-next" id="parserNext">Next</button>
     </div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 4: Schema -->
+  <!-- STEP 4: Model -->
   <!-- ============================================================ -->
   <div class="wizard-step" id="step-3">
+    <div class="step-title">Choose a model</div>
+    <div class="step-subtitle">The model reads the parsed text and extracts your data.</div>
+    <div class="demo-explainer" id="demo-step3">
+      <div class="demo-label">Demo walkthrough</div>
+      <div id="demoToolsModel">The <strong>model</strong> does the actual extraction. GPT-4.1 Mini is the best default — cheap, fast, and accurate on most documents.</div>
+    </div>
+
+    <div class="tool-grid" id="modelGrid">
+      <div class="tool-card selected" data-model="gpt-4.1-mini">
+        <div class="tool-name">GPT-4.1 Mini</div>
+        <div class="tool-desc">Best balance of cost and accuracy. Handles most documents well.</div>
+      </div>
+      <div class="tool-card" data-model="gpt-4.1-nano">
+        <div class="tool-name">GPT-4.1 Nano</div>
+        <div class="tool-desc">Cheapest option. Good for simple, well-structured documents.</div>
+      </div>
+      <div class="tool-card" data-model="gpt-4.1">
+        <div class="tool-name">GPT-4.1</div>
+        <div class="tool-desc">Most capable OpenAI model. Use for complex or ambiguous documents.</div>
+      </div>
+    </div>
+    <div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.5rem;">Anthropic models (Claude Sonnet, Claude Haiku) are also available.</div>
+    <input type="hidden" id="modelSelect">
+
+    <div class="settings-link">Need to set API keys? <a href="/settings/page">Settings</a></div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goToStep(2)">Back</button>
+      <button class="btn-next" id="modelNext">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 5: Schema -->
+  <!-- ============================================================ -->
+  <div class="wizard-step" id="step-4">
     <div class="step-title">Define your schema</div>
     <div class="step-subtitle" id="schemaSubtitle">Add the data points you want to extract from each document.</div>
-    <div class="demo-explainer" id="demo-step3">
+    <div class="demo-explainer" id="demo-step4">
       <div class="demo-label">Demo walkthrough</div>
       The schema tells Petey <strong>what to look for</strong>. Each field is a data point you want extracted. A few things to notice:
       <br><br>
@@ -547,19 +574,19 @@ if (new URLSearchParams(window.location.search).get('demo')) {
     </div>
 
     <div class="wizard-nav">
-      <button class="btn-back" onclick="goToStep(2)">Back</button>
+      <button class="btn-back" onclick="goToStep(3)">Back</button>
       <button class="btn-next" id="extractBtn">Extract</button>
     </div>
     <div class="extract-hint" id="extractHint" style="display:none;">Click <strong>Suggest fields</strong> above to generate a schema first.</div>
   </div>
 
   <!-- ============================================================ -->
-  <!-- STEP 5: Results -->
+  <!-- STEP 6: Results -->
   <!-- ============================================================ -->
-  <div class="wizard-step" id="step-4">
+  <div class="wizard-step" id="step-5">
     <div class="step-title" id="resultsTitle">Extracting...</div>
     <div class="step-subtitle" id="resultsSubtitle">Working on your files.</div>
-    <div class="demo-explainer" id="demo-step4">
+    <div class="demo-explainer" id="demo-step5">
       <div class="demo-label">Demo walkthrough</div>
       That's it! Petey parsed the PDF, sent the text to the model with your schema, and returned structured data. You can <strong>download the results</strong> as CSV or JSON, and <strong>download the schema</strong> to reuse it on the main Extractor page with a whole batch of files.
     </div>
@@ -623,7 +650,7 @@ async function authFetch(url, opts = {}) {
 }
 
 // --- Wizard state ---
-const STEPS = ['Upload', 'Mode', 'Tools', 'Schema', 'Results'];
+const STEPS = ['Upload', 'Mode', 'Parser', 'Model', 'Schema', 'Results'];
 
 window.openLightbox = function(src) {
   const lb = document.createElement('div');
@@ -661,16 +688,15 @@ async function loadSettings() {
     _hasAnthropicKey = hasKey(data.anthropic_api_key);
     _models = data.models || [];
 
-    const sel = document.getElementById('modelSelect');
-    sel.innerHTML = '';
-    for (const m of _models) {
-      const opt = document.createElement('option');
-      opt.value = m.id;
-      opt.textContent = m.name;
-      if (m.default) opt.selected = true;
-      sel.appendChild(opt);
+    // Set default model from settings, highlight matching card
+    const defaultModel = data.model || 'gpt-4.1-mini';
+    W.model = defaultModel;
+    document.getElementById('modelSelect').value = defaultModel;
+    const matchCard = document.querySelector('.tool-card[data-model="' + defaultModel + '"]');
+    if (matchCard) {
+      document.querySelectorAll('.tool-card[data-model]').forEach(c => c.classList.remove('selected'));
+      matchCard.classList.add('selected');
     }
-    if (_models.length) W.model = sel.value;
   } catch (_) {}
 }
 
@@ -681,9 +707,9 @@ setTimeout(loadSettings, 300);
 function renderProgress() {
   const el = document.getElementById('stepProgress');
   let html = '';
-  const labels = W.mode === 'text' ? ['Upload', 'Mode', 'Tools', 'Results'] : STEPS;
+  const labels = W.mode === 'text' ? ['Upload', 'Mode', 'Parser', 'Model', 'Results'] : STEPS;
   // Map visual indices to actual step indices
-  const stepMap = W.mode === 'text' ? [0, 1, 2, 4] : [0, 1, 2, 3, 4];
+  const stepMap = W.mode === 'text' ? [0, 1, 2, 3, 5] : [0, 1, 2, 3, 4, 5];
   const visualIdx = stepMap.indexOf(currentStep);
 
   labels.forEach((label, i) => {
@@ -733,8 +759,10 @@ window.startOver = function() {
   W.schemaName = '';
   document.getElementById('dropzone').reset();
   document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
-  document.querySelectorAll('.parser-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.tool-card[data-parser]').forEach(c => c.classList.remove('selected'));
   document.querySelector('[data-parser="pymupdf"]').classList.add('selected');
+  document.querySelectorAll('.tool-card[data-model]').forEach(c => c.classList.remove('selected'));
+  document.querySelector('[data-model="gpt-4.1-mini"]').classList.add('selected');
   document.getElementById('results').innerHTML = '';
   document.getElementById('status').textContent = '';
   document.getElementById('streamProgress').style.display = 'none';
@@ -751,6 +779,7 @@ window.startOver = function() {
   document.getElementById('tryDemoWrap').style.display = '';
   document.getElementById('uploadBack').style.display = 'none';
   document.getElementById('suggestFieldsBtn').classList.remove('demo-hint');
+  document.getElementById('suggestFieldsBtn').style.display = '';
   document.getElementById('extractHint').style.display = 'none';
   goToStep(0);
 };
@@ -787,7 +816,8 @@ const DEMOS = {
     steps: {
       upload: 'We\'ve loaded the demo document for you. In a real workflow, you\'d drop your own PDFs here. You can also set a <strong>page range</strong> below if you only need specific pages from a larger document.',
       mode: 'This clinical note contains <strong>one set of data points per document</strong> — a single patient\'s info. There\'s no table or list of rows to extract. That makes this a <strong>Query</strong> — we want one row of results per file. If we had a batch of 100 notes, we\'d get 100 rows.',
-      tools: 'The <strong>parser</strong> reads text from the PDF. Since this is a clean, digital document, <strong>PyMuPDF</strong> is fast and free. For scanned or handwritten documents, use Marker instead.<br><br>The <strong>model</strong> does the actual extraction. This document is simple enough that any model works — even the cheapest ones score 97%+ on documents like this.',
+      toolsParser: 'The <strong>parser</strong> reads text from the PDF. Since this is a clean, digital document, <strong>PyMuPDF</strong> is fast and free. For scanned or handwritten documents, use Datalab instead.',
+      toolsModel: 'The <strong>model</strong> does the actual extraction. <strong>GPT-4.1 Mini</strong> is the best default — it\'s cheap, fast, and handles most documents well. For complex or ambiguous documents, GPT-4.1 or Claude Sonnet are more capable but cost more.',
       schema: 'The schema tells Petey <strong>what to look for</strong>. Each field is a data point you want extracted. A few things to notice:<br><br><strong>Gender</strong> is a Category field — we give it a fixed set of values (Male, Female, Non-binary) so the model picks from a controlled list instead of making up its own labels.<br><br><strong>Descriptions matter.</strong> For gender, we say "infer from pronouns if not obvious" — this guides the model when the document doesn\'t state gender explicitly. For the second complaint, we note it "can be null" so the model knows it\'s OK to leave it blank.<br><br>You can also click <strong>Suggest fields</strong> to have Petey analyze the document and propose a schema automatically.',
       results: 'That\'s it! Petey parsed the PDF, sent the text to the model with your schema, and returned structured data. You can <strong>download the results</strong> as CSV or JSON, and <strong>download the schema</strong> to reuse it on the main Extractor page with a whole batch of files.',
     },
@@ -824,8 +854,9 @@ const DEMOS = {
     steps: {
       upload: 'We\'ve loaded the Des Moines budget PDF. The tables we want are on <strong>pages 6 through 9</strong>, so we\'ve set the page range to skip the rest of the document.',
       mode: 'Each page has <strong>multiple rows of budget data</strong> — line items with dollar amounts across fiscal years. That makes this a <strong>Table</strong> extraction. Petey will return multiple rows per page.',
-      tools: 'We\'re using <strong>Marker</strong> here. While PyMuPDF is free and fast, tabular data benefits from Marker\'s AI-powered parsing — it better preserves the structure of complex tables with subtables and interspersed text.',
-      schema: 'We used <strong>Suggest fields</strong> to generate most of this schema automatically. One key decision: <strong>fy_2021_22_percent_total</strong> is set to Text instead of Number. That\'s because the original data includes percentage signs and "&lt;1%" values that won\'t parse as numbers.<br><br>The <strong>section</strong> field is a Category with fixed values — this helps the model correctly label which budget section each row belongs to, even when the section header is several rows above.',
+      toolsParser: 'We\'re using <strong>Datalab</strong> here. While PyMuPDF is free and fast, tabular data benefits from Datalab\'s AI-powered parsing — it better preserves the structure of complex tables with subtables and interspersed text.',
+      toolsModel: '<strong>GPT-4.1 Mini</strong> handles tabular extraction well at low cost. For especially complex tables, GPT-4.1 or Claude Sonnet can be more accurate, but Mini is usually sufficient.',
+      schema: 'We built this schema from the <strong>column headers in the budget tables</strong>. One key decision: <strong>fy_2021_22_percent_total</strong> is set to Text instead of Number. That\'s because the original data includes percentage signs and "&lt;1%" values that won\'t parse as numbers.<br><br>The <strong>section</strong> field is a Category with fixed values — this helps the model correctly label which budget section each row belongs to, even when the section header is several rows above.',
       results: 'Petey extracted all the budget line items across four pages, complete with the correct category and subcategory labels. You can download the results as CSV and work with them in a spreadsheet.',
     },
     resultCsv: '/static/demo/des_moines_sample_output.csv',
@@ -861,7 +892,8 @@ const DEMOS = {
     steps: {
       upload: 'We\'ve loaded a Congressional Periodic Transaction Report. This is the full document — no page range needed.',
       mode: 'Each page has a <strong>table of stock transactions</strong> with multiple rows. That makes this a <strong>Table</strong> extraction.',
-      tools: 'We\'re using <strong>Marker</strong> for parsing. The PTR has a structured table layout with metadata rows below each entry — Marker does a better job preserving that structure than a basic text extractor.',
+      toolsParser: 'We\'re using <strong>Datalab</strong> for parsing. The PTR has a structured table layout with metadata rows below each entry — Datalab does a better job preserving that structure than a basic text extractor.',
+      toolsModel: '<strong>GPT-4.1 Mini</strong> is a solid choice here. The transaction data is structured and repetitive, which plays to cheaper models\' strengths.',
       schema: 'Two things to notice here:<br><br>The <strong>filer_name</strong> and <strong>state_district</strong> fields come from the header on page 1, not from the transactions table. We added these manually — Suggest fields picked up the transaction columns but missed the filer info at the top.<br><br>We set <strong>Header pages</strong> to 1. This tells Petey to send page 1 along with every other page, so the model always has access to the filer information when extracting transactions from later pages.',
       results: 'Every transaction row now includes the filer\'s name and district, even though that information only appeared on the first page. The header pages feature made that possible without any post-processing.',
     },
@@ -871,16 +903,16 @@ const DEMOS = {
   },
 
   taxroll: {
-    title: 'Demo: Suggest Fields',
-    subtitle: 'Let Petey figure out non-traditional formatting with Suggest Fields.',
-    about: 'We\'ll extract property data from a <strong>municipal tax assessment roll</strong> for the town of Greenburgh, New York. The layout is non-traditional — the only labels are a data map at the top of each page, and the data is arranged in blocks rather than clean rows.<br><br>This demo shows how <strong>Suggest Fields</strong> can handle documents that most people wouldn\'t know how to schema by hand.',
+    title: 'Demo: Page Range + Suggest Fields',
+    subtitle: 'Use page range to target specific pages, then let Suggest Fields figure out the schema.',
+    about: 'We\'ll extract property data from a <strong>municipal tax assessment roll</strong> for the town of Greenburgh, New York. The full document is 20 pages, but we only need a few — so we\'ll use <strong>page range</strong> to target pages 2–4.<br><br>The layout is non-traditional — the only labels are a data map at the top of each page, and the data is arranged in blocks rather than clean rows. This demo shows how <strong>Suggest Fields</strong> can handle documents that most people wouldn\'t know how to schema by hand.',
     disclaimer: '',
-    doc: { pdf: '/static/demo/tax_roll_sample_demo.pdf', screenshot: '/static/demo/tax_roll_screenshot.png', filename: 'tax_roll_demo.pdf' },
+    doc: { pdf: '/static/demo/tax_roll_1_20.pdf', screenshot: '/static/demo/tax_roll_screenshot.png', filename: 'tax_roll_1_20.pdf' },
     schema: { yaml: '/static/demo/tax_roll_schema.yaml', name: 'property_tax_roll' },
     mode: 'table',
     parser: 'marker',
     model: 'gpt-4.1-mini',
-    pageRange: '',
+    pageRange: '2-4',
     headerPages: '',
     suggestFields: true,
     suggestedFields: [
@@ -899,14 +931,15 @@ const DEMOS = {
     ],
     fields: [], // starts empty — suggest fields populates
     steps: {
-      upload: 'We\'ve loaded a two-page sample from the Greenburgh, NY tax assessment roll. The full document is hundreds of pages, but the format repeats.',
+      upload: 'We\'ve loaded the first 20 pages of the Greenburgh, NY tax assessment roll. The data we want is on <strong>pages 2 through 4</strong>, so we\'ve set the page range — Petey will skip the rest of the document. This is useful for large files where you only need a specific section.',
       mode: 'Each page has <strong>multiple property entries</strong> in a repeating block format. That makes this a <strong>Table</strong> extraction.',
-      tools: 'We\'re using <strong>Marker</strong> here. The tax roll has a non-traditional block layout that\'s hard for basic text extractors — Marker\'s AI parsing does a much better job preserving the spatial relationships in the data.',
+      toolsParser: 'We\'re using <strong>Datalab</strong> here. The tax roll has a non-traditional block layout that\'s hard for basic text extractors — Datalab\'s AI parsing does a much better job preserving the spatial relationships in the data.',
+      toolsModel: '<strong>GPT-4.1 Mini</strong> works well even for this unusual layout. The model just needs the parsed text and a good schema — the parser does the heavy lifting on layout.',
       schema: 'This is where it gets interesting. The tax roll doesn\'t have obvious column headers — just a data map at the top of each page. Most people wouldn\'t know where to start with a schema.<br><br>Click <strong>Suggest fields</strong> and Petey will analyze the document and figure out the structure. Most LLMs know what a tax assessment roll is, so the schema it generates is surprisingly accurate.',
       results: 'Petey extracted structured property records from a document that has no traditional table format. Each block became a clean row with parcel ID, owner, address, and assessment values.',
     },
     resultCsv: '/static/demo/tax_roll_sample_output.csv',
-    demoPages: 3,
+    demoPages: 3,  // pages 2-4 = 3 pages extracted
   },
 };
 
@@ -930,13 +963,13 @@ async function loadDemo(demoId) {
   else { disclaimerEl.style.display = 'none'; }
   document.getElementById('demoOverviewImg').src = demo.doc.screenshot;
   document.getElementById('demoOverviewDownloads').innerHTML =
-    '<div style="font-size:0.72rem; color:var(--text-dim); margin-bottom:0.35rem;">Try it yourself:</div>' +
-    '<a href="' + demo.doc.pdf + '" download="' + demo.doc.filename + '" style="font-size:0.75rem; color:var(--accent); text-decoration:none;">Download PDF</a>' +
-    (demo.schema.yaml ? ' &nbsp;|&nbsp; <a href="' + demo.schema.yaml + '" download style="font-size:0.75rem; color:var(--accent); text-decoration:none;">Download Schema</a>' : '');
+    '<div style="font-size:0.72rem; color:var(--text-dim); margin-bottom:0.35rem;">Download original documents:</div>' +
+    '<a href="' + demo.doc.pdf + '" download="' + demo.doc.filename + '" style="font-size:0.75rem; color:var(--accent); text-decoration:none;">PDF</a>' +
+    (demo.schema.yaml ? ' &nbsp;|&nbsp; <a href="' + demo.schema.yaml + '" download style="font-size:0.75rem; color:var(--accent); text-decoration:none;">Schema</a>' : '');
 
   // Inject step-specific explainer copy
-  const stepIds = ['demo-step0', 'demo-step1', 'demo-step2', 'demo-step3', 'demo-step4'];
-  const stepKeys = ['upload', 'mode', 'tools', 'schema', 'results'];
+  const stepIds = ['demo-step0', 'demo-step1', 'demo-step2', 'demo-step3', 'demo-step4', 'demo-step5'];
+  const stepKeys = ['upload', 'mode', 'toolsParser', 'toolsModel', 'schema', 'results'];
   stepIds.forEach((id, i) => {
     const el = document.getElementById(id);
     if (el && demo.steps[stepKeys[i]]) {
@@ -962,8 +995,10 @@ async function loadDemo(demoId) {
   // Update UI selections
   document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
   document.querySelector('[data-mode="' + demo.mode + '"]')?.classList.add('selected');
-  document.querySelectorAll('.parser-card').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.tool-card[data-parser]').forEach(c => c.classList.remove('selected'));
   document.querySelector('[data-parser="' + demo.parser + '"]')?.classList.add('selected');
+  document.querySelectorAll('.tool-card[data-model]').forEach(c => c.classList.remove('selected'));
+  document.querySelector('[data-model="' + demo.model + '"]')?.classList.add('selected');
   document.getElementById('schemaName').value = W.schemaName;
   document.getElementById('cfgPageRange').value = W.pageRange;
   const modelSel = document.getElementById('modelSelect');
@@ -989,15 +1024,21 @@ async function loadDemo(demoId) {
     W.fields = [{ name: '', type: 'string', description: '', values: '' }];
     renderFields();
     suggestBtn.classList.add('demo-hint');
+    suggestBtn.style.display = '';
     extractHint.style.display = 'block';
   } else if (W.fields.length) {
     renderFields();
     suggestBtn.classList.remove('demo-hint');
+    suggestBtn.style.display = 'none';
     extractHint.style.display = 'none';
   } else {
     W.fields = [{ name: '', type: 'string', description: '', values: '' }];
     renderFields();
+    suggestBtn.style.display = 'none';
   }
+
+  // Show header pages only when demo uses them
+  document.getElementById('headerPagesGroup').style.display = demo.headerPages ? '' : 'none';
 
   _demoMode = true;
   showDemoExplainers(true);
@@ -1072,23 +1113,32 @@ document.querySelectorAll('.mode-card').forEach(card => {
 });
 
 // --- Step 3: Tools (parser + model) ---
-document.querySelectorAll('.parser-card').forEach(card => {
+document.querySelectorAll('.tool-card[data-parser]').forEach(card => {
   card.addEventListener('click', () => {
     W.parser = card.dataset.parser;
-    document.querySelectorAll('.parser-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.tool-card[data-parser]').forEach(c => c.classList.remove('selected'));
     card.classList.add('selected');
   });
 });
 
-document.getElementById('modelSelect').addEventListener('change', e => {
-  W.model = e.target.value;
+document.querySelectorAll('.tool-card[data-model]').forEach(card => {
+  card.addEventListener('click', () => {
+    W.model = card.dataset.model;
+    document.querySelectorAll('.tool-card[data-model]').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    document.getElementById('modelSelect').value = W.model;
+  });
 });
 
 document.getElementById('modeNext').addEventListener('click', () => {
   if (W.mode) goToStep(2);
 });
 
-document.getElementById('toolsNext').addEventListener('click', () => {
+document.getElementById('parserNext').addEventListener('click', () => {
+  goToStep(3);
+});
+
+document.getElementById('modelNext').addEventListener('click', () => {
   W.model = document.getElementById('modelSelect').value;
   if (W.mode === 'text') {
     // Skip schema step, go straight to results/extract
@@ -1096,7 +1146,7 @@ document.getElementById('toolsNext').addEventListener('click', () => {
   } else {
     if (!W.fields.length) W.fields = [{ name: '', type: 'string', description: '', values: '' }];
     renderFields();
-    goToStep(3);
+    goToStep(4);
   }
 });
 
@@ -1424,8 +1474,8 @@ async function runDemoExtraction() {
   const demo = _activeDemo;
   if (!demo) return;
 
-  goToStep(4);
-  document.getElementById('demo-step4').classList.remove('visible');
+  goToStep(5);
+  document.getElementById('demo-step5').classList.remove('visible');
 
   const st = document.getElementById('status');
   const resultsEl = document.getElementById('results');
@@ -1481,7 +1531,7 @@ async function runDemoExtraction() {
 
   document.getElementById('resultsTitle').textContent = 'Results';
   document.getElementById('resultsSubtitle').textContent = 'Done — 1 file processed.';
-  document.getElementById('demo-step4').classList.add('visible');
+  document.getElementById('demo-step5').classList.add('visible');
 
   let html = '';
 
@@ -1546,13 +1596,16 @@ async function runDemoExtraction() {
   html += '</div>';
   if (!isTable) html += '</div></div>'; // close right column + grid for query mode
 
-  // Try it yourself
+  // Downloads + try it yourself
   html += '<div style="display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap; align-items:center; padding-top:0.75rem; border-top:1px solid var(--border);">';
-  html += '<span style="font-size:0.72rem; color:var(--text-dim);">Try it yourself:</span>';
-  html += '<a class="btn-add" href="' + demo.doc.pdf + '" download="' + demo.doc.filename + '" style="text-decoration:none; text-align:center; font-size:0.75rem;">Download PDF</a>';
+  html += '<span style="font-size:0.72rem; color:var(--text-dim);">Download original documents:</span>';
+  html += '<a class="btn-add" href="' + demo.doc.pdf + '" download="' + demo.doc.filename + '" style="text-decoration:none; text-align:center; font-size:0.75rem;">PDF</a>';
   if (demo.schema.yaml) {
-    html += '<a class="btn-add" href="' + demo.schema.yaml + '" download style="text-decoration:none; text-align:center; font-size:0.75rem;">Download Schema</a>';
+    html += '<a class="btn-add" href="' + demo.schema.yaml + '" download style="text-decoration:none; text-align:center; font-size:0.75rem;">Schema</a>';
   }
+  html += '</div>';
+  html += '<div style="margin-top:0.75rem; font-size:0.82rem; color:var(--text-dim);">';
+  html += 'Ready to try it yourself? Load the PDF and schema in the <a href="/" style="color:var(--accent); text-decoration:none; font-weight:600;">Extractor</a> with your own API key.';
   html += '</div>';
 
   resultsEl.innerHTML = html;
@@ -1562,8 +1615,8 @@ async function runDemoExtraction() {
 async function runExtraction() {
   if (_demoMode) return runDemoExtraction();
 
-  goToStep(4);
-  document.getElementById('demo-step4').classList.remove('visible');
+  goToStep(5);
+  document.getElementById('demo-step5').classList.remove('visible');
 
   const spec = W.mode !== 'text' ? buildSpec() : { name: 'text_extraction' };
   const total = W.files.length;
@@ -1678,7 +1731,7 @@ async function runExtraction() {
   st.textContent = statusText;
   st.style.whiteSpace = 'pre-line';
   document.getElementById('resultsTitle').textContent = 'Results';
-  if (_demoMode) document.getElementById('demo-step4').classList.add('visible');
+  if (_demoMode) document.getElementById('demo-step5').classList.add('visible');
   document.getElementById('resultsSubtitle').textContent = 'Extraction complete.';
 
   const AUTO_THRESHOLD = 200;

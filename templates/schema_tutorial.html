@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Schema Tutorial — Petey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:          #111111;
+  --surface:     #1c1c1c;
+  --surface-2:   #262626;
+  --border:      #333333;
+  --accent:      #d8572a;
+  --accent-h:    #e06b3e;
+  --accent-dim:  rgba(216,87,42,0.12);
+  --green:       #86efac;
+  --text:        #f2ece4;
+  --text-muted:  #db7c26;
+  --text-dim:    #999999;
+  --r:           8px;
+  --r-lg:        12px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.main { max-width: 680px; margin: 0 auto; padding: 2.75rem 2rem 5rem; }
+
+.tut-step { display: none; }
+.tut-step.visible { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.step-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.6rem; font-weight: 400; margin-bottom: 0.35rem;
+}
+.step-subtitle { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 1.5rem; line-height: 1.6; }
+
+.prose { font-size: 0.88rem; line-height: 1.75; color: var(--text-dim); margin-bottom: 1.25rem; }
+.prose strong { color: var(--text); }
+
+.field-preview {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 1.25rem 1.5rem; margin-bottom: 1.25rem;
+}
+.field-preview .fp-label {
+  font-size: 0.67rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem;
+}
+.field-row-preview {
+  display: grid; grid-template-columns: 1fr 0.6fr 1.5fr; gap: 0.5rem;
+  padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.82rem;
+  align-items: start;
+}
+.field-row-preview:last-child { border-bottom: none; }
+.field-row-preview .frp-name { font-weight: 600; }
+.field-row-preview .frp-type {
+  font-size: 0.72rem; padding: 0.15rem 0.4rem; border-radius: 3px;
+  background: var(--surface-2); color: var(--text-dim); text-align: center;
+}
+.field-row-preview .frp-desc { color: var(--text-dim); font-size: 0.78rem; }
+
+.field-row-preview.highlight {
+  background: var(--accent-dim); border-radius: var(--r); padding: 0.5rem;
+  border-bottom-color: transparent;
+}
+
+.callout {
+  background: var(--surface-2); border-left: 3px solid var(--accent);
+  border-radius: 0 var(--r) var(--r) 0; padding: 0.75rem 1rem;
+  font-size: 0.82rem; color: var(--text-dim); line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+.callout strong { color: var(--text); }
+
+.values-pill {
+  display: inline-block; font-size: 0.72rem; padding: 0.15rem 0.5rem;
+  border-radius: 3px; background: var(--accent-dim); color: var(--accent);
+  margin: 0.1rem 0.15rem;
+}
+
+.wizard-nav {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border);
+}
+.btn-back, .btn-next {
+  padding: 0.5rem 1.25rem; font-size: 0.82rem; font-weight: 600;
+  border-radius: 6px; cursor: pointer; font-family: inherit; transition: all 0.15s;
+}
+.btn-back {
+  background: transparent; color: var(--text-dim); border: 1px solid var(--border);
+}
+.btn-back:hover { border-color: var(--text-dim); color: var(--text); }
+.btn-next {
+  background: var(--accent); color: #000; border: 1px solid var(--accent);
+}
+.btn-next:hover { background: var(--accent-h); }
+
+.demo-link {
+  display: inline-block; font-size: 0.82rem; color: var(--accent);
+  text-decoration: none; font-weight: 600; transition: color 0.15s;
+}
+.demo-link:hover { color: var(--accent-h); }
+
+.progress-dots {
+  display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 2rem;
+}
+.progress-dots .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border); transition: background 0.2s;
+}
+.progress-dots .dot.active { background: var(--accent); }
+.progress-dots .dot.done { background: var(--green); }
+
+.schema-yaml {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 1rem; font-size: 0.75rem;
+  line-height: 1.5; overflow-x: auto; color: var(--text-dim);
+  white-space: pre-wrap; font-family: 'SF Mono', 'Fira Code', monospace;
+  margin-bottom: 1.25rem;
+}
+
+/* MOBILE */
+@media (max-width: 640px) {
+  .main { padding: 1.5rem 1rem 3rem; }
+  .step-title { font-size: 1.3rem; }
+  .field-row-preview { grid-template-columns: 1fr; gap: 0.25rem; }
+}
+</style>
+</head>
+<body>
+<main class="main">
+
+  <script src="/static/navbar.js"></script>
+  <nav-bar active="demos" subtitle="Schema Tutorial"></nav-bar>
+
+  <div class="progress-dots" id="progressDots"></div>
+
+  <!-- ============================================================ -->
+  <!-- INTRO -->
+  <!-- ============================================================ -->
+  <div class="tut-step visible" id="tut-0">
+    <div class="step-title">Understanding Schemas</div>
+    <div class="step-subtitle">A schema tells Petey exactly what data to extract from your documents. It's the most important part of the process.</div>
+
+    <div class="prose">
+      A schema is a list of <strong>fields</strong>. Each field has three parts:
+    </div>
+
+    <div class="field-preview">
+      <div class="fp-label">Anatomy of a field</div>
+      <div class="field-row-preview">
+        <div class="frp-name">Name</div>
+        <div class="frp-type">Type</div>
+        <div class="frp-desc">Description</div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <strong>Name</strong> becomes the column header in your results.<br>
+      <strong>Type</strong> tells the model what kind of data to expect.<br>
+      <strong>Description</strong> guides the model's interpretation — this is where you give instructions.
+    </div>
+
+    <div class="prose">
+      If you've used ChatGPT or Claude, you already know the basics — a schema is essentially a <strong>structured prompt</strong>. Instead of writing a paragraph asking an AI to "find the patient's name, age, and gender", you define each piece of data as a field. Petey turns your schema into a prompt behind the scenes.
+    </div>
+
+    <div class="prose">
+      We'll build a schema for a clinical note step by step. By the end, you'll understand when to use each field type and how descriptions shape your results.
+    </div>
+
+    <div class="wizard-nav">
+      <span></span>
+      <button class="btn-next" onclick="goTo(1)">Start</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 1: Text field (copy) -->
+  <!-- ============================================================ -->
+  <div class="tut-step" id="tut-1">
+    <div class="step-title">Text fields: copying data</div>
+    <div class="step-subtitle">The simplest kind of extraction — find a value and copy it.</div>
+
+    <div class="prose">
+      A <strong>Text</strong> field tells the model to extract a string value. For something like a patient's name, the model just finds it in the document and copies it directly.
+    </div>
+
+    <div class="field-preview">
+      <div class="fp-label">Field 1</div>
+      <div class="field-row-preview highlight">
+        <div class="frp-name">name</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Patient name</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      The description here is simple — <strong>"Patient name"</strong> — because there's no ambiguity. The model knows exactly what to look for. Not every field needs a complex description.
+    </div>
+
+    <div class="prose">
+      The result for this field will be something like <strong>"Margaret Ellison"</strong> — copied straight from the document.
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(0)">Back</button>
+      <button class="btn-next" onclick="goTo(2)">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 2: Number field -->
+  <!-- ============================================================ -->
+  <div class="tut-step" id="tut-2">
+    <div class="step-title">Number fields</div>
+    <div class="step-subtitle">Use Number when you want a clean numeric value.</div>
+
+    <div class="prose">
+      A <strong>Number</strong> field tells the model to return a numeric value. Even if the document says "34 years old", the model will extract just <strong>34</strong>.
+    </div>
+
+    <div class="field-preview">
+      <div class="fp-label">Fields so far</div>
+      <div class="field-row-preview">
+        <div class="frp-name">name</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Patient name</div>
+      </div>
+      <div class="field-row-preview highlight">
+        <div class="frp-name">age</div>
+        <div class="frp-type">Number</div>
+        <div class="frp-desc">Patient age</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      Number is the right choice here because age is always numeric and we want a clean value for analysis. If a document had ages like "thirty-four" or "3 months", the model will still return a number.
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(1)">Back</button>
+      <button class="btn-next" onclick="goTo(3)">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 3: Category field -->
+  <!-- ============================================================ -->
+  <div class="tut-step" id="tut-3">
+    <div class="step-title">Category fields</div>
+    <div class="step-subtitle">Constrain the output to a fixed set of values.</div>
+
+    <div class="prose">
+      A <strong>Category</strong> field gives the model a list of allowed values. Instead of free-text, it must pick from your list. This standardizes the output — no "M" vs "Male" vs "male" inconsistencies.
+    </div>
+
+    <div class="field-preview">
+      <div class="fp-label">Fields so far</div>
+      <div class="field-row-preview">
+        <div class="frp-name">name</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Patient name</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">age</div>
+        <div class="frp-type">Number</div>
+        <div class="frp-desc">Patient age</div>
+      </div>
+      <div class="field-row-preview highlight">
+        <div class="frp-name">gender</div>
+        <div class="frp-type">Category</div>
+        <div class="frp-desc">Infer from pronouns if not obvious</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <span style="font-size:0.75rem; color:var(--text-dim);">Allowed values:</span>
+      <span class="values-pill">Male</span>
+      <span class="values-pill">Female</span>
+      <span class="values-pill">Non-binary</span>
+    </div>
+
+    <div class="callout">
+      Notice the description: <strong>"Infer from pronouns if not obvious"</strong>. This is where descriptions shine. The document might not say "Gender: Female" — but if it uses "she/her" pronouns, the model knows what to do. The description is an instruction, not just a label.
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(2)">Back</button>
+      <button class="btn-next" onclick="goTo(4)">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 4: Date field -->
+  <!-- ============================================================ -->
+  <div class="tut-step" id="tut-4">
+    <div class="step-title">Date fields</div>
+    <div class="step-subtitle">Extract dates in a consistent format.</div>
+
+    <div class="prose">
+      A <strong>Date</strong> field extracts date values. Documents express dates in all sorts of ways — "March 5, 2024", "3/5/24", "05-MAR-2024". The Date type standardizes them, and you can use the description to specify the format you want.
+    </div>
+
+    <div class="field-preview">
+      <div class="fp-label">Fields so far</div>
+      <div class="field-row-preview">
+        <div class="frp-name">name</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Patient name</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">age</div>
+        <div class="frp-type">Number</div>
+        <div class="frp-desc">Patient age</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">gender</div>
+        <div class="frp-type">Category</div>
+        <div class="frp-desc">Infer from pronouns if not obvious</div>
+      </div>
+      <div class="field-row-preview highlight">
+        <div class="frp-name">visit_date</div>
+        <div class="frp-type">Date</div>
+        <div class="frp-desc">Date of the visit in YYYY-MM-DD format</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      The description <strong>"Date of the visit in YYYY-MM-DD format"</strong> does two things: it tells the model <em>which</em> date to extract (the visit, not the birth date or discharge date), and <em>how</em> to format it. Specifying the format in the description is one of the most common and useful patterns — it ensures every date in your results is consistent regardless of how it appeared in the original document.
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(3)">Back</button>
+      <button class="btn-next" onclick="goTo(5)">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 5: Text interpretation -->
+  <!-- ============================================================ -->
+  <div class="tut-step" id="tut-5">
+    <div class="step-title">Text interpretation</div>
+    <div class="step-subtitle">Text fields can also read, interpret, and summarize — not just copy.</div>
+
+    <div class="prose">
+      We already used a <strong>Text</strong> field to copy the patient's name. But Text fields are more versatile than that. The clinical note doesn't have a line labeled "Visit Outcome:" — instead, the model needs to read the full narrative and summarize the result. That's still a Text field — the <strong>description</strong> is what changes the behavior.
+    </div>
+
+    <div class="field-preview">
+      <div class="fp-label">Fields so far</div>
+      <div class="field-row-preview">
+        <div class="frp-name">name</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Patient name</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">age</div>
+        <div class="frp-type">Number</div>
+        <div class="frp-desc">Patient age</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">gender</div>
+        <div class="frp-type">Category</div>
+        <div class="frp-desc">Infer from pronouns if not obvious</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">visit_date</div>
+        <div class="frp-type">Date</div>
+        <div class="frp-desc">Date of the visit in YYYY-MM-DD format</div>
+      </div>
+      <div class="field-row-preview highlight">
+        <div class="frp-name">visit_outcome</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Outcome of the visit</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      Compare the two Text fields: <strong>"Patient name"</strong> means <em>find and copy</em>. <strong>"Outcome of the visit"</strong> means <em>read, understand, and summarize</em>. Same type, completely different behavior. Think of the description as a mini-prompt — it's your instruction to the AI for that specific field.
+    </div>
+
+    <div class="prose">
+      The result might be something like <strong>"discharged with salbutamol inhaler"</strong> — not a direct quote from the document, but a concise summary the model produced by reading the full note.
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(4)">Back</button>
+      <button class="btn-next" onclick="goTo(6)">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- STEP 6: Additional Instructions -->
+  <!-- ============================================================ -->
+  <div class="tut-step" id="tut-6">
+    <div class="step-title">Additional instructions</div>
+    <div class="step-subtitle">Give the model extra context that applies to the whole extraction.</div>
+
+    <div class="prose">
+      Field descriptions are per-field instructions. But sometimes you need to tell the model something that applies to <strong>every field</strong> — or to the document as a whole. That's what the <strong>Additional Instructions</strong> box is for.
+    </div>
+
+    <div class="prose">
+      Think of it like adding a note at the top of a prompt. For our clinical notes, we might write:
+    </div>
+
+    <div class="field-preview">
+      <div class="fp-label">Additional Instructions</div>
+      <div style="font-size:0.82rem; color:var(--text); line-height:1.6; padding:0.25rem 0;">
+        These are emergency department clinical notes. Use medical terminology where appropriate. If a field cannot be determined from the text, return null rather than guessing.
+      </div>
+    </div>
+
+    <div class="callout">
+      This does three things: it tells the model the <strong>type of document</strong> it's reading (so it knows what context to apply), sets a <strong>tone</strong> (medical terminology), and establishes a <strong>default behavior</strong> (null over guessing). These instructions are sent to the model alongside your schema and the document text — it's all part of the same prompt.
+    </div>
+
+    <div class="prose">
+      Good additional instructions answer questions like: <em>What kind of documents are these? Should the model use specific terminology? What should it do when the answer isn't clear?</em>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(5)">Back</button>
+      <button class="btn-next" onclick="goTo(7)">Next</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SUMMARY -->
+  <!-- ============================================================ -->
+  <div class="tut-step" id="tut-7">
+    <div class="step-title">Your schema</div>
+    <div class="step-subtitle">Here's the complete schema we built, plus a few extra fields.</div>
+
+    <div class="field-preview">
+      <div class="fp-label">ed_clinical_note</div>
+      <div class="field-row-preview">
+        <div class="frp-name">name</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Patient name</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">age</div>
+        <div class="frp-type">Number</div>
+        <div class="frp-desc">Patient age</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">gender</div>
+        <div class="frp-type">Category</div>
+        <div class="frp-desc">Infer from pronouns if not obvious</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">visit_date</div>
+        <div class="frp-type">Date</div>
+        <div class="frp-desc">Date of the visit in YYYY-MM-DD format</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">presenting_complaint_1</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Primary complaint</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">presenting_complaint_2</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Secondary complaint (can be null)</div>
+      </div>
+      <div class="field-row-preview">
+        <div class="frp-name">visit_outcome</div>
+        <div class="frp-type">Text</div>
+        <div class="frp-desc">Outcome of the visit</div>
+      </div>
+    </div>
+
+    <div class="prose">
+      We added two fields for <strong>presenting complaints</strong> to round out the schema. Notice that the second complaint says <strong>"can be null"</strong> in the description — this tells the model it's OK to leave it blank when there's no secondary complaint. You can add as many fields as you need.
+    </div>
+
+    <div class="callout">
+      <strong>Key takeaways:</strong><br>
+      &bull; <strong>Text</strong> — free-form values: can copy directly or interpret and summarize<br>
+      &bull; <strong>Number</strong> — clean numeric values (ages, amounts, counts)<br>
+      &bull; <strong>Category</strong> — pick from a fixed list you define<br>
+      &bull; <strong>Date</strong> — date values, use the description to specify format<br>
+      &bull; <strong>Descriptions</strong> are mini-prompts — they're your per-field instructions to the AI<br>
+      &bull; <strong>Additional instructions</strong> set context for the whole extraction<br>
+      &bull; You can also use <strong>Suggest Fields</strong> to have Petey generate a schema automatically
+    </div>
+
+    <div class="prose">
+      The schema is ready to use. Download it and load it in the Extractor, or see it in action in the Getting Started demo.
+    </div>
+
+    <div style="margin-bottom:0.5rem;">
+      <button id="toggleYaml" style="font-size:0.75rem; color:var(--text-dim); background:none; border:none; cursor:pointer; font-family:inherit; text-decoration:underline; text-underline-offset:3px;">View schema YAML</button>
+    </div>
+
+    <div class="schema-yaml" id="schemaYaml" style="display:none;">name: ed_clinical_note
+instructions: "These are emergency department clinical notes. Use medical terminology where appropriate. If a field cannot be determined from the text, return null rather than guessing."
+fields:
+  name:
+    type: string
+    description: "Patient name"
+  age:
+    type: number
+    description: "Patient age"
+  gender:
+    type: enum
+    description: "Infer from pronouns if not obvious"
+    values: [Male, Female, Non-binary]
+  visit_date:
+    type: date
+    description: "Date of the visit in YYYY-MM-DD format"
+  presenting_complaint_1:
+    type: string
+    description: "Primary complaint"
+  presenting_complaint_2:
+    type: string
+    description: "Secondary complaint (can be null)"
+  visit_outcome:
+    type: string
+    description: "Outcome of the visit"</div>
+
+    <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+      <button class="btn-next" id="downloadSchema" style="font-size:0.78rem;">Download Schema</button>
+      <a class="btn-next" href="/guide?demo=clinical" style="text-decoration:none; text-align:center;">See it in the Getting Started demo &rarr;</a>
+    </div>
+
+    <div class="wizard-nav">
+      <button class="btn-back" onclick="goTo(6)">Back</button>
+      <a class="btn-next" href="/demos" style="text-decoration:none; text-align:center;">More demos</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const TOTAL_STEPS = 8;
+let current = 0;
+
+function goTo(n) {
+  document.querySelectorAll('.tut-step').forEach(el => el.classList.remove('visible'));
+  document.getElementById('tut-' + n).classList.add('visible');
+  current = n;
+  renderDots();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderDots() {
+  const el = document.getElementById('progressDots');
+  el.innerHTML = '';
+  for (let i = 0; i < TOTAL_STEPS; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot' + (i === current ? ' active' : i < current ? ' done' : '');
+    dot.style.cursor = 'pointer';
+    dot.addEventListener('click', () => { if (i <= current) goTo(i); });
+    el.appendChild(dot);
+  }
+}
+
+document.getElementById('toggleYaml').addEventListener('click', () => {
+  const el = document.getElementById('schemaYaml');
+  const btn = document.getElementById('toggleYaml');
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? 'View schema YAML' : 'Hide schema YAML';
+});
+
+document.getElementById('downloadSchema').addEventListener('click', () => {
+  const yaml = document.getElementById('schemaYaml').textContent;
+  const blob = new Blob([yaml], { type: 'text/yaml' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ed_clinical_note.yaml';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+renderDots();
+</script>
+<script src="/static/footer.js"></script>
+<site-footer></site-footer>
+</body>
+</html>
